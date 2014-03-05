@@ -12,13 +12,13 @@
 		var setContainerWidth = function() {
 			container.css( 'width', containerLength );
 		};
-		var appendPrevNextButtons = function () {
-			container.after('<div class="prevNext prevLink" id="' + settings.prevID + '">Previous</div><div class="prevNext nextLink" id="' + settings.nextID + '">Next</div>');
-		}
-		var initialize = function () {
+		var appendPrevNextButtons = function() {
+			container.after( '<div class="prevNext prevLink" id="' + settings.prevID + '">Previous</div><div class="prevNext nextLink" id="' + settings.nextID + '">Next</div>' );
+		};
+		var initialize = function() {
 			appendPrevNextButtons();
 			setContainerWidth();
-		}
+		};
 
 		initialize();
 
@@ -32,6 +32,30 @@
 			}
 			var carouselSnap = new CarouselSnap( this, options );
 			element.data( 'carouselSnap', carouselSnap );
+		} );
+	};
+
+    /**
+     * function to get time on how long did the user hover on the element.
+     * To use
+     * checkHover( '#theelement' , function( hoverTime){
+     *   code to do with the time;
+     * } )
+     * @param  html element The element to check.
+     * @param  function callback  Called when function is done.
+     * @return Object hoverTime The time it is hovering on the element in seconds.
+     */
+	$.fn.carouselSnap.checkHover = function( element, callback ) {
+		$( element ).hover( function( ) {
+			//get start time
+			$( this ).data( 'onHover', new Date().getTime() );
+		}, function() {
+			//get end time
+			var outHover = new Date().getTime();
+			//time is start
+			var hoverTime = ( outHover - $( this ).data( 'onHover' ) ) / 1000;
+			//return time in seconds
+			callback( hoverTime );
 		} );
 	};
 
