@@ -4,6 +4,12 @@
 	var color           = 0;
 	var fetchMultiplier = 0;
 
+	var removeElements = function ( event ) {
+		$('.vid-tab').carouselSnap.removeItem( '.carousel-snap-12', function( res, msg ) {
+			console.log( msg );
+		} )
+	}
+
 	/* Loading effect */
 	var loadingEffect = {
 		'show' :	function () {
@@ -22,6 +28,7 @@
 	var loadElements = function ( color, callback ) {
 
 		/* Unbind trigger to API Call event */
+		$( '#remove' ).off( 'click', removeElements );
 		$( '#appendNow' ).off( 'click', loadMoreElements );
 
 		color = color ? color : '';
@@ -39,6 +46,7 @@
 				}
 			}
 			fetchMultiplier++;
+			$( '#remove' ).on( 'click', removeElements );
 			$( '#appendNow' ).on( 'click', loadMoreElements );
 			callback( items );
 		}, 1000 )

@@ -9,13 +9,16 @@
 
 	var requestForAppendActive = false;
 	var itemsToBeAdded         = '';
+	var requestForRemoveActive = true;
+	var container;
+	var widthPerItem;
 
 	var CarouselSnap = function ( element, options ) {
 
 		var settings          = $.extend( {}, $.fn.carouselSnap.defaults, options );
 		var elementsToMove    = settings.elementsToMove;
-		var container         = $( element );
-		var widthPerItem      = container.children().outerWidth( true );
+		container         = $( element );
+		widthPerItem      = container.children().outerWidth( true );
 		var moveby            = '-=' + ( widthPerItem * elementsToMove ) + 'px';
 		var movebyPrev        = '+=' + ( widthPerItem * elementsToMove ) + 'px';
 		var parentHolderWidth = container.parent().outerWidth();
@@ -49,25 +52,6 @@
 			}
 		}
 
-		var removeTempItems = function ( shiftedToLeft ) {
-			if ( countAnimate == ( availableItems + settings.elementsToMove ) ) {
-				if ( shiftedToLeft ) {
-					for ( var i = 1; i <= settings.elementsToMove; i++ ) {
-						container.children().first().remove();
-					}
-				} else {
-					for ( var i = 1; i <= settings.elementsToMove; i++ ) {
-						container.children().last().remove();
-					}
-				}
-				checkForNewItems();
-				listenToClick();
-				countAnimate = 1;
-			} else {
-				countAnimate++;
-			}
-		}
-
 		var checkForNewItems = function () {
 			if ( requestForAppendActive ) {
 				var currentItemsLength = availableItems;
@@ -83,6 +67,26 @@
 				itemsToBeAdded = '';
 			}
 		};
+
+		var removeTempItems = function ( shiftedToLeft ) {
+			if ( countAnimate == ( availableItems + settings.elementsToMove ) ) {
+				if ( shiftedToLeft ) {
+					for ( var i = 1; i <= settings.elementsToMove; i++ ) {
+						container.children().first().remove();
+					}
+				} else {
+					for ( var i = 1; i <= settings.elementsToMove; i++ ) {
+						container.children().last().remove();
+					}
+				}
+				checkForNewItems();
+				requestForRemoveActive = true;
+				listenToClick();
+				countAnimate = 1;
+			} else {
+				countAnimate++;
+			}
+		}
 
 		var shiftLeft = function () {
 			appendItems( true );
@@ -109,6 +113,7 @@
 		}
 
 		var unbindListenToClick = function () {
+			requestForRemoveActive = false;
 			$( '#' + settings.nextID ).off( 'click', shiftLeft);
 			$( '#' + settings.prevID ).off( 'click', shiftRight);
 		}
@@ -186,6 +191,26 @@
 	$.fn.carouselSnap.appendItems = function ( items ) {
 		requestForAppendActive = true;
 		itemsToBeAdded = itemsToBeAdded + items;
+	}
+
+	$.fn.carouselSnap.removeItem = function ( itemClass, callback ) {
+		var el = container.find( itemClass );
+		if ( requestForRemoveActive && el.length ) {
+			var start = el.index() + 1;
+			var end = container.children().length;
+			for ( var i = start; i < end; i++ ) {
+				var currentLeft = container.children().eq( i ).position().left;
+				container.children().eq( i ).css( 'left', currentLeft - widthPerItem )
+			}
+			el.remove();
+			callback ( true, 'Success' );
+		} else {
+			if ( el.length ) {
+				callback( false, 'Dom not ready' );
+			} else {
+				callback( false, 'Item not found' );
+			}
+		}
 	}
 
 	$.fn.carouselSnap.defaults = {
