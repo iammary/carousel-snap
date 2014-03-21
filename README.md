@@ -33,9 +33,31 @@ $( '#carousel' ).carouselSnap({
 		nextID: 'next-slide',
 		prevID: 'previous-slide',
 		elementsToMove: 4,
-		startOnCenter: true
+		startOnCenter: true,
 });
 ```
+
+### Exposed functions
+
+1. Append Items
+
+	```JavaScript
+	var items = <li>1</li><li>2</li>
+	$('.vid-tab').carouselSnap.appendItems( items )
+	```
+
+2. Remove
+
+	```JavaScript
+	var items = '.carousel-snap-12'
+	$('.vid-tab').carouselSnap.remove( item, function( res, msg ) {
+	/*
+	*		wherein res is true after successful removal
+	*		and false otherwise
+	*		msg displays corresponding res messages both on success or error event
+	*/
+	} )
+	```
 
 ### Code Reference
 
