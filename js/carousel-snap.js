@@ -200,21 +200,25 @@
 	}
 
 	$.fn.carouselSnap.removeItem = function ( itemClass, callback ) {
-		var el = container.find( itemClass );
-		if ( requestForRemoveActive && el.length ) {
-			var start = el.index() + 1;
-			for ( var i = start; i < getAvailableItems(); i++ ) {
-				var currentLeft = container.children().eq( i ).position().left;
-				container.children().eq( i ).css( 'left', currentLeft - widthPerItem )
-			}
-			el.remove();
-			callback ( true, 'Success' );
-		} else {
-			if ( el.length ) {
-				callback( false, 'Dom not ready' );
+		if ( element.data( 'carouselSnap' ) ) {
+			var el = container.find( itemClass );
+			if ( requestForRemoveActive && el.length ) {
+				var start = el.index() + 1;
+				for ( var i = start; i < getAvailableItems(); i++ ) {
+					var currentLeft = container.children().eq( i ).position().left;
+					container.children().eq( i ).css( 'left', currentLeft - widthPerItem )
+				}
+				el.remove();
+				callback ( true, 'Success' );
 			} else {
-				callback( false, 'Item not found' );
+				if ( el.length ) {
+					callback( false, 'Dom not ready' );
+				} else {
+					callback( false, 'Item not found' );
+				}
 			}
+		} else {
+			callback( false, 'Container does not have instance of Carousel Snap' );
 		}
 	}
 
