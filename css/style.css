@@ -88,7 +88,7 @@ ul {
 	background  : url('../img/left-arrow.png') no-repeat center center rgba(0,0,0,.1);
 	text-indent : -9999px;
 	border      : 0;
-	z-index     : 10000;
+	/*z-index     : 100;*/
 	position    : absolute;
 	top         : 0;
 	left        : 0;
@@ -125,7 +125,11 @@ li > div {
 	display        : block;
 	vertical-align : middle;
 	text-align     : center;
-	margin         : 32% 0;
 	text-shadow    : rgba(0,0,0,.5) 1px 1px 1px;
 	color          : white;
+	height         : 40%;
+	padding        : 30% 0;
+	position: relative;
+	z-index: 9999;
+	cursor: pointer;
 }

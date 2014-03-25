@@ -4,11 +4,14 @@
 	var color           = 0;
 	var fetchMultiplier = 0;
 
-	var removeElements = function ( event ) {
-		$('.vid-tab').carouselSnap.removeItem( '.carousel-snap-12', function( res, msg ) {
-			console.log( msg );
-		} )
+	var removeElements = function ( e ) {
+		var classname = $(e).attr('class').substring(7)
+		$('.' + classname ).remove();
+		$( '.vid-tab' ).carouselSnap( {
+				updatePosition: true
+			} );
 	}
+
 
 	/* Loading effect */
 	var loadingEffect = {
@@ -42,12 +45,12 @@
 			for( var j = 0; j < 4; j++ ) {
 				for ( var i = 1; i <= 6; i++ ) {
 					var countItem = i + ( j * 6 ) + ( fetchMultiplier * 24 );
-					items = items + '<li class="dummy ' + color + '"><div>' + countItem + '</div></li>';
+					items = items + '<li class="dummy ' + color + '"><div class="divs">' + countItem + '</div></li>';
 				}
 			}
 			fetchMultiplier++;
-			$( '#remove' ).on( 'click', removeElements );
-			$( '#appendNow' ).on( 'click', loadMoreElements );
+			// $( '#remove' ).on( 'click', removeElements );
+			// $( '#appendNow' ).on( 'click', loadMoreElements );
 			callback( items );
 		}, 1000 )
 	}
@@ -56,8 +59,11 @@
 			$('.vid-tab').append( items );
 			loadingEffect.hide();
 			$( '.vid-tab' ).carouselSnap( {
-				elementsToMove: 4
+				elementsToMoveOnClick: 4
 			} );
+			$('.vid-tab li').click(function( e ){
+				removeElements( this )
+			})
 	} )
 
 	var loadMoreElements = function () {

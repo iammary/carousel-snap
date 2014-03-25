@@ -9,27 +9,17 @@
 
 	var CarouselSnap = function ( element, settings, pluginUsed ) {
 
-		var showMsg = function ( msg ) {
-			console.log( msg );
-		}
-
 		var availableItems;
 
-		var elementsToMove         = settings.elementsToMoveOnClick;
-		var container              = $( element );
-		var updatePositionActive   = true;
-		var shiftLeftCount         = 0;
-		var shiftRightCount        = 0;
-		var countAnimate           = 1;
-		var requestForAppendActive = false;
-		var timeoutId              = null;
-
+		var elementsToMove       = settings.elementsToMove;
+		var container            = $( element );
+		var updatePositionActive = true;
 
 		var getAvailableItems = function () {
 			return container.children().length;
 		}
 
-		var hidePrevNextLink = function () {
+		var hidePrevNextLink = function ()) {
 			container.parent().find('.prevNext').hide();
 		}
 
@@ -43,13 +33,6 @@
 
 		var getWidthPerItem = function () {
 			return container.children().outerWidth( true )
-		}
-
-		var moveby     = '-=' + ( getWidthPerItem() * elementsToMove ) + 'px';
-		var movebyPrev = '+=' + ( getWidthPerItem() * elementsToMove ) + 'px';
-
-		var setContainerWidth = function () {
-			container.css( 'width', getContainerWidth( container ) );
 		}
 
 		var alignCenter = function ( alignFlag ) {
@@ -83,8 +66,8 @@
 				for ( var i = 1; i < getAvailableItems(); i++ ) {
 					var previousLeft = container.children().eq( i - 1 ).position().left;
 					container.children().eq( i ).css( {
-						'left'     : previousLeft + getWidthPerItem(),
-						'position' : 'absolute'
+						'left', previousLeft + widthPerItem,
+						'position', 'absolute'
 					} )
 				}
 				checkItemsTotal();
@@ -106,54 +89,46 @@
 			}
 		};
 
-		var lastItemLeftValue = function () {
-			return container.children().last().position().left
-		}
-
-		var firstItemLeftValue = function () {
-			return container.children().first().position().left;
-		}
-
 		var appendTempItems = function ( shiftedToLeft ) {
 			if ( shiftedToLeft ) {
 				var lastItemLeftValueInt = lastItemLeftValue();
-				for ( var i = 1; i <= elementsToMove; i++ ) {
+				for ( var i = 1; i <= settings.elementsToMove; i++ ) {
 					var clonedItem = container.children().eq( i - 1 ).clone( true );
-					container.append( clonedItem.css( 'left', lastItemLeftValueInt + getWidthPerItem() * i ) );
+					container.append( clonedItem.css( 'left', lastItemLeftValueInt + widthPerItem * i ) );
 				}
 			} else {
 				var firstItemLeftValueInt = firstItemLeftValue();
 				availableItems = getAvailableItems()
-				for ( var i = 1; i <= elementsToMove; i++ ) {
+				for ( var i = 1; i <= settings.elementsToMove; i++ ) {
 					var clonedItem = container.children().eq( availableItems - 1 ).clone( true );
-					container.prepend( clonedItem.css( 'left', firstItemLeftValueInt - getWidthPerItem() * i ) );
+					container.prepend( clonedItem.css( 'left', firstItemLeftValueInt - widthPerItem * i ) );
 				}
 			}
 		}
 
 		var checkForNewItems = function () {
-			if ( requestForAppendActive ) {
-				var currentItemsLength = getAvailableItems();
-				var lastItemLeftValueInt = lastItemLeftValue();
-				container.append( itemsToBeAdded );
-				for (var i = currentItemsLength; i < getAvailableItems(); i++) {
-					var leftValue = lastItemLeftValueInt + ( getWidthPerItem() * ( i - currentItemsLength + 1 ) );
-					container.children().eq( i ).css( 'left', leftValue );
-				}
-				addStylesToItems( currentItemsLength );
-				requestForAppendActive = false;
-				itemsToBeAdded = '';
-			}
+			// if ( requestForAppendActive ) {
+			// 	var currentItemsLength = getAvailableItems();
+			// 	var lastItemLeftValueInt = lastItemLeftValue();
+			// 	container.append( itemsToBeAdded );
+			// 	for (var i = currentItemsLength; i < getAvailableItems(); i++) {
+			// 		var leftValue = lastItemLeftValueInt + ( widthPerItem * ( i - currentItemsLength + 1 ) );
+			// 		container.children().eq( i ).css( 'left', leftValue );
+			// 	}
+			// 	addStylesToItems( container, currentItemsLength );
+			// 	requestForAppendActive = false;
+			// 	itemsToBeAdded = '';
+			// }
 		};
 
 		var removeTempItems = function ( shiftedToLeft ) {
 			if ( countAnimate == getAvailableItems() ) {
 				if ( shiftedToLeft ) {
-					for ( var i = 1; i <= elementsToMove; i++ ) {
+					for ( var i = 1; i <= settings.elementsToMove; i++ ) {
 						container.children().first().remove();
 					}
 				} else {
-					for ( var i = 1; i <= elementsToMove; i++ ) {
+					for ( var i = 1; i <= settings.elementsToMove; i++ ) {
 						container.children().last().remove();
 					}
 				}
@@ -168,21 +143,8 @@
 			}
 		}
 
-		var checkEvent = function( isPrev , event ) {
-			var arrows = [ '#' + settings.nextID, '#' + settings.prevID ];
-			if ( event != undefined) {
-				elementsToMove = settings.elementsToMoveOnClick;
-				triggerLeaveHover( arrows[ isPrev ] );
-			} else {
-				elementsToMove = settings.elementsToMoveOnHover;
-			}
-			moveby     = '-=' + ( getWidthPerItem() * elementsToMove ) + 'px';
-			movebyPrev = '+=' + ( getWidthPerItem() * elementsToMove ) + 'px';
-		};
-
-		var shiftLeft = function ( event ) {
+		var shiftLeft = function () {
 			if ( !shiftLeftCount ) {
-				checkEvent( 0 , event);
 				appendTempItems( true );
 				container.children().animate( {
 					'left': moveby
@@ -196,9 +158,8 @@
 			shiftLeftCount++;
 		}
 
-		var shiftRight = function ( event ) {
+		var shiftRight = function () {
 			if( !shiftRightCount ) {
-				checkEvent( 1 , event );
 				appendTempItems( false );
 				container.children().animate( {
 					'left': movebyPrev
@@ -212,44 +173,15 @@
 			shiftRightCount++;
 		}
 
-		var onHover = function( element, callback ) {
-			$( element ).hover( function() {
-				//start time
-				if ( !timeoutId ) {
-					timeoutId = window.setInterval( function() {
-						callback();
-					}, settings.time );
-				}
-			}, function() {
-				//reset time
-				if ( timeoutId ) {
-					window.clearInterval( timeoutId );
-					timeoutId = null;
-				}
-			} );
-		};
-
-		var triggerLeaveHover = function( element ) {
-			window.clearInterval( timeoutId );
-			timeoutId = null;
-			$( element ).trigger( 'mouseleave' );
-			$( element ).trigger( 'mouseenter' );
-		};
-
-		var listenToHover = function() {
-			onHover( '#' + settings.nextID, shiftLeft );
-			onHover( '#' + settings.prevID, shiftRight );
-		};
-
-		var listenToClick = function () {
-			$( '#' + settings.nextID ).on( 'click', shiftLeft );
-			$( '#' + settings.prevID ).on( 'click', shiftRight );
-		}
-
 		var unbindListenToClick = function () {
 			updatePositionActive   = false;
 			$( '#' + settings.nextID ).off( 'click',  shiftLeft);
 			$( '#' + settings.prevID ).off( 'click', shiftRight);
+		}
+
+		var listenToClick = function () {
+			$( '#' + settings.nextID ).on( 'click', shiftLeft );
+			$( '#' + settings.prevID ).on( 'click', shiftRight );
 		}
 
 		var initialize = function () {
@@ -265,12 +197,9 @@
 				addStylesToItems( 0, addClass );
 				if ( checkItemsTotal() ) {
 					listenToClick();
-					listenToHover();
 				}
 			}
 		}
-
-		initialize();
 
 	}
 
@@ -292,7 +221,7 @@
 		nextID                : 'next-slide',
 		prevID                : 'previous-slide',
 		elementsToMoveOnClick : 4,
-		elementsToMoveOnHover : 4,
+		elementsToMoveOnHover : 1,
 		startOnCenter         : true,
 		time                  : 1500,
 		updatePosition        : false
