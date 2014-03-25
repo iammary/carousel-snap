@@ -7,50 +7,126 @@
 ( function ( $ ) {
 	'use strict';
 
-	var requestForAppendActive = false;
-	var itemsToBeAdded         = '';
-	var requestForRemoveActive = true;
+	var CarouselSnap = function ( element, settings, pluginUsed ) {
 
-	var container;
-	var widthPerItem;
+		var showMsg = function ( msg ) {
+			console.log( msg );
+		}
 
-	var getAvailableItems = function () {
-		return container.children().length;
-	}
+		var availableItems;
 
-	var CarouselSnap = function ( element, options ) {
+		var elementsToMove         = settings.elementsToMoveOnClick;
+		var container              = $( element );
+		var updatePositionActive   = true;
+		var shiftLeftCount         = 0;
+		var shiftRightCount        = 0;
+		var countAnimate           = 1;
+		var requestForAppendActive = false;
+		var timeoutId              = null;
 
-		var settings          = $.extend( {}, $.fn.carouselSnap.defaults, options );
-		var elementsToMove    = settings.elementsToMove;
-		container         = $( element );
-		widthPerItem      = container.children().outerWidth( true );
-		var moveby            = '-=' + ( widthPerItem * elementsToMove ) + 'px';
-		var movebyPrev        = '+=' + ( widthPerItem * elementsToMove ) + 'px';
-		var parentHolderWidth = container.parent().outerWidth();
-		var containerWidth    = getAvailableItems() * container.children().outerWidth( true );
-		var availableItems    = getAvailableItems();
-		var countAnimate      = 1;
 
-		var initializeSettings = function () {
-			containerWidth = getAvailableItems() * container.children().outerWidth( true );
+		var getAvailableItems = function () {
+			return container.children().length;
+		}
+
+		var hidePrevNextLink = function () {
+			container.parent().find('.prevNext').hide();
+		}
+
+		var getContainerWidth = function () {
+			return getAvailableItems() * container.children().outerWidth( true );
+		}
+
+		var getparentHolderWidth = function () {
+			return container.parent().outerWidth();
+		}
+
+		var getWidthPerItem = function () {
+			return container.children().outerWidth( true )
+		}
+
+		var moveby     = '-=' + ( getWidthPerItem() * elementsToMove ) + 'px';
+		var movebyPrev = '+=' + ( getWidthPerItem() * elementsToMove ) + 'px';
+
+		var setContainerWidth = function () {
+			container.css( 'width', getContainerWidth( container ) );
+		}
+
+		var alignCenter = function ( alignFlag ) {
+			var nonvisibleItems = ( getContainerWidth() - getparentHolderWidth() ) / getWidthPerItem();
+			var itemsToShift;
+			if ( alignFlag ) {
+				itemsToShift = Math.floor( nonvisibleItems / 2 );
+			} else {
+				itemsToShift = 0;
+			}
+			for (var i = 0; i < getAvailableItems(); i++) {
+				var moveByItem = getWidthPerItem() * ( i  - itemsToShift );
+				container.children().eq( i ).css( 'left', moveByItem )
+			}
+		}
+
+		var checkItemsTotal = function ( container, elementsToMove ) {
+			if ( getAvailableItems() <= elementsToMove ) {
+				hidePrevNextLink();
+				alignCenter( false );
+				return false;
+			} else {
+				alignCenter( true );
+				return true;
+			}
+		}
+
+		var updateItemPosition = function () {
+			availableItems = getAvailableItems();
+			if ( getAvailableItems() ) {
+				for ( var i = 1; i < getAvailableItems(); i++ ) {
+					var previousLeft = container.children().eq( i - 1 ).position().left;
+					container.children().eq( i ).css( {
+						'left'     : previousLeft + getWidthPerItem(),
+						'position' : 'absolute'
+					} )
+				}
+				checkItemsTotal();
+			}
+		}
+
+		var appendPrevNextButtons = function () {
+			container.after( '<div class="prevNext prevLink" id="' + settings.prevID + '">Previous</div><div class="prevNext nextLink" id="' + settings.nextID + '">Next</div>' );
+		};
+
+		var addStylesToItems = function ( start, addClass ) {
+			for (var i = start; i < getAvailableItems(); i++ ) {
+				container.children().eq( i ).css( 'position', 'absolute' )
+			}
+			if ( addClass ) {
+				for (var i = start; i < getAvailableItems(); i++ ) {
+					container.children().eq( i ).addClass( 'carousel-snap-' + i );
+				}
+			}
 		};
 
 		var lastItemLeftValue = function () {
 			return container.children().last().position().left
 		}
 
+		var firstItemLeftValue = function () {
+			return container.children().first().position().left;
+		}
+
 		var appendTempItems = function ( shiftedToLeft ) {
 			if ( shiftedToLeft ) {
 				var lastItemLeftValueInt = lastItemLeftValue();
-				for ( var i = 1; i <= settings.elementsToMove; i++ ) {
-					var clonedItem = container.children().eq( i - 1 ).clone();
-					container.append( clonedItem.css( 'left', lastItemLeftValueInt + widthPerItem * i ) );
+				for ( var i = 1; i <= elementsToMove; i++ ) {
+					var clonedItem = container.children().eq( i - 1 ).clone( true );
+					container.append( clonedItem.css( 'left', lastItemLeftValueInt + getWidthPerItem() * i ) );
 				}
 			} else {
-				var firstItemLeftValue = container.children().first().position().left;
-				for ( var i = 1; i <= settings.elementsToMove; i++ ) {
-					var clonedItem = container.children().eq( availableItems - 1 ).clone();
-					container.prepend( clonedItem.css( 'left', firstItemLeftValue - widthPerItem * i ) );
+				var firstItemLeftValueInt = firstItemLeftValue();
+				availableItems = getAvailableItems()
+				for ( var i = 1; i <= elementsToMove; i++ ) {
+					var clonedItem = container.children().eq( availableItems - 1 ).clone( true );
+					container.prepend( clonedItem.css( 'left', firstItemLeftValueInt - getWidthPerItem() * i ) );
 				}
 			}
 		}
@@ -61,7 +137,7 @@
 				var lastItemLeftValueInt = lastItemLeftValue();
 				container.append( itemsToBeAdded );
 				for (var i = currentItemsLength; i < getAvailableItems(); i++) {
-					var leftValue = lastItemLeftValueInt + ( widthPerItem * ( i - currentItemsLength + 1 ) );
+					var leftValue = lastItemLeftValueInt + ( getWidthPerItem() * ( i - currentItemsLength + 1 ) );
 					container.children().eq( i ).css( 'left', leftValue );
 				}
 				addStylesToItems( currentItemsLength );
@@ -73,156 +149,153 @@
 		var removeTempItems = function ( shiftedToLeft ) {
 			if ( countAnimate == getAvailableItems() ) {
 				if ( shiftedToLeft ) {
-					for ( var i = 1; i <= settings.elementsToMove; i++ ) {
+					for ( var i = 1; i <= elementsToMove; i++ ) {
 						container.children().first().remove();
 					}
 				} else {
-					for ( var i = 1; i <= settings.elementsToMove; i++ ) {
+					for ( var i = 1; i <= elementsToMove; i++ ) {
 						container.children().last().remove();
 					}
 				}
 				checkForNewItems();
-				requestForRemoveActive = true;
-				console.log( 'removeTempItems' );
 				listenToClick();
-				countAnimate = 1;
+				updatePositionActive = true;
+				countAnimate         = 1;
+				shiftLeftCount       = 0;
+				shiftRightCount      = 0;
 			} else {
 				countAnimate++;
 			}
 		}
 
-		var shiftLeft = function () {
-			console.log( 'shiftLeft' )
-			appendTempItems( true );
-			container.children().animate( {
-				'left': moveby
-			}, {
-					'start'    : unbindListenToClick,
-					'complete' : function () {
-						removeTempItems( true );
-					}
-			} );
+		var checkEvent = function( isPrev , event ) {
+			var arrows = [ '#' + settings.nextID, '#' + settings.prevID ];
+			if ( event != undefined) {
+				elementsToMove = settings.elementsToMoveOnClick;
+				triggerLeaveHover( arrows[ isPrev ] );
+			} else {
+				elementsToMove = settings.elementsToMoveOnHover;
+			}
+			moveby     = '-=' + ( getWidthPerItem() * elementsToMove ) + 'px';
+			movebyPrev = '+=' + ( getWidthPerItem() * elementsToMove ) + 'px';
+		};
+
+		var shiftLeft = function ( event ) {
+			if ( !shiftLeftCount ) {
+				checkEvent( 0 , event);
+				appendTempItems( true );
+				container.children().animate( {
+					'left': moveby
+				}, {
+						'start'    : unbindListenToClick,
+						'complete' : function () {
+							removeTempItems( true );
+						}
+				} );
+			}
+			shiftLeftCount++;
 		}
 
-		var shiftRight = function () {
-			appendTempItems( false );
-			container.children().animate( {
-				'left': movebyPrev
-			}, {
-					'start'    : unbindListenToClick,
-					'complete' : function () {
-						removeTempItems( false );
-					}
+		var shiftRight = function ( event ) {
+			if( !shiftRightCount ) {
+				checkEvent( 1 , event );
+				appendTempItems( false );
+				container.children().animate( {
+					'left': movebyPrev
+				}, {
+						'start'    : unbindListenToClick,
+						'complete' : function () {
+							removeTempItems( false );
+						}
+				} );
+			}
+			shiftRightCount++;
+		}
+
+		var onHover = function( element, callback ) {
+			$( element ).hover( function() {
+				//start time
+				if ( !timeoutId ) {
+					timeoutId = window.setInterval( function() {
+						callback();
+					}, settings.time );
+				}
+			}, function() {
+				//reset time
+				if ( timeoutId ) {
+					window.clearInterval( timeoutId );
+					timeoutId = null;
+				}
 			} );
+		};
+
+		var triggerLeaveHover = function( element ) {
+			window.clearInterval( timeoutId );
+			timeoutId = null;
+			$( element ).trigger( 'mouseleave' );
+			$( element ).trigger( 'mouseenter' );
+		};
+
+		var listenToHover = function() {
+			onHover( '#' + settings.nextID, shiftLeft );
+			onHover( '#' + settings.prevID, shiftRight );
+		};
+
+		var listenToClick = function () {
+			$( '#' + settings.nextID ).on( 'click', shiftLeft );
+			$( '#' + settings.prevID ).on( 'click', shiftRight );
 		}
 
 		var unbindListenToClick = function () {
-			requestForRemoveActive = false;
-			$( '#' + settings.nextID ).off( 'click', shiftLeft);
+			updatePositionActive   = false;
+			$( '#' + settings.nextID ).off( 'click',  shiftLeft);
 			$( '#' + settings.prevID ).off( 'click', shiftRight);
 		}
 
-		var listenToClick = function () {
-			console.log( 'listenToClick' )
-			$( '#' + settings.nextID ).on( 'click', shiftLeft);
-			$( '#' + settings.prevID ).on( 'click', shiftRight);
-		}
-
-		var alignCenter = function ( alignFlag ) {
-			var nonvisibleItems = ( containerWidth - parentHolderWidth ) / widthPerItem;
-			var itemsToShift;
-			if ( alignFlag ) {
-				itemsToShift = Math.floor( nonvisibleItems / 2 );
-			} else {
-				itemsToShift = 0;
-			}
-			for (var i = 0; i < availableItems; i++) {
-				var moveByItem = widthPerItem * ( i  - itemsToShift );
-				container.children().eq( i ).css( 'left', moveByItem )
-			}
-		}
-
-		var hidePrevNextLink = function () {
-			container.parent().find('.prevNext').hide();
-		}
-
-		var checkItemsTotal = function () {
-			if ( availableItems <= settings.elementsToMove ) {
-				hidePrevNextLink();
-				alignCenter( false );
-			} else {
-				alignCenter( true );
-				listenToClick();
-			}
-		}
-
-		var addStylesToItems = function ( start ) {
-			console.log( 'addStylesToItems ')
-			for (var i = start; i < getAvailableItems(); i++) {
-				container.children().eq( i )
-				.css( 'position', 'absolute' )
-				.addClass( 'carousel-snap-' + i );
-			}
-		};
-
-		var setContainerWidth = function () {
-			container.css( 'width', containerWidth );
-		}
-
-		var appendPrevNextButtons = function () {
-			container.after( '<div class="prevNext prevLink" id="' + settings.prevID + '">Previous</div><div class="prevNext nextLink" id="' + settings.nextID + '">Next</div>' );
-		};
-
 		var initialize = function () {
-			appendPrevNextButtons();
 			setContainerWidth();
-			addStylesToItems( 0 );
-			checkItemsTotal();
-			initializeSettings();
-		};
+			if ( settings.updatePosition ) {
+				updateItemPosition();
+			} else {
+				var addClass = false;
+				if ( !pluginUsed ) {
+					appendPrevNextButtons();
+					addClass = true;
+				}
+				addStylesToItems( 0, addClass );
+				if ( checkItemsTotal() ) {
+					listenToClick();
+					listenToHover();
+				}
+			}
+		}
+
 		initialize();
-	};
+
+	}
+
 
 	$.fn.carouselSnap = function ( options ) {
 		return this.each( function ( key, value ) {
-			var element = $( this );
+			var element    = $( this );
+			var settings   = $.extend( {}, $.fn.carouselSnap.defaults, options );
+			var pluginUsed = false;
 			if ( element.data( 'carouselSnap' ) ) {
-				return element.data( 'carouselSnap' );
+				pluginUsed = true;
 			}
-			var carouselSnap = new CarouselSnap( this, options );
+			var carouselSnap = new CarouselSnap( this, settings, pluginUsed );
 			element.data( 'carouselSnap', carouselSnap );
 		} );
 	};
 
-	$.fn.carouselSnap.appendItems = function ( items ) {
-		requestForAppendActive = true;
-		itemsToBeAdded = itemsToBeAdded + items;
-	}
-
-	$.fn.carouselSnap.removeItem = function ( itemClass, callback ) {
-		var el = container.find( itemClass );
-		if ( requestForRemoveActive && el.length ) {
-			var start = el.index() + 1;
-			for ( var i = start; i < getAvailableItems(); i++ ) {
-				var currentLeft = container.children().eq( i ).position().left;
-				container.children().eq( i ).css( 'left', currentLeft - widthPerItem )
-			}
-			el.remove();
-			callback ( true, 'Success' );
-		} else {
-			if ( el.length ) {
-				callback( false, 'Dom not ready' );
-			} else {
-				callback( false, 'Item not found' );
-			}
-		}
-	}
-
 	$.fn.carouselSnap.defaults = {
-		nextID: 'next-slide',
-		prevID: 'previous-slide',
-		elementsToMove: 4,
-		startOnCenter: true,
+		nextID                : 'next-slide',
+		prevID                : 'previous-slide',
+		elementsToMoveOnClick : 4,
+		elementsToMoveOnHover : 4,
+		startOnCenter         : true,
+		time                  : 1500,
+		updatePosition        : false
 	};
 
 } )( jQuery );
