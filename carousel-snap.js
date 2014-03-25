@@ -80,14 +80,24 @@
 		var updateItemPosition = function () {
 			availableItems = getAvailableItems();
 			if ( getAvailableItems() ) {
-				for ( var i = 1; i < getAvailableItems(); i++ ) {
-					var previousLeft = container.children().eq( i - 1 ).position().left;
-					container.children().eq( i ).css( {
-						'left'     : previousLeft + getWidthPerItem(),
-						'position' : 'absolute'
-					} )
+				if ( getAvailableItems() <= settings.elementsToMoveOnClick ) {
+					hidePrevNextLink();
+					for ( var i = 0; i < getAvailableItems(); i++ ) {
+						container.children().eq( i ).css( {
+							'left'     : i * getWidthPerItem(),
+							'position' : 'absolute'
+						} )
+					}
+				} else {
+					for ( var i = 1; i < getAvailableItems(); i++ ) {
+						var previousLeft = container.children().eq( i - 1 ).position().left;
+						container.children().eq( i ).css( {
+							'left'     : previousLeft + getWidthPerItem(),
+							'position' : 'absolute'
+						} )
+					}
+					checkItemsTotal();
 				}
-				checkItemsTotal();
 			}
 		}
 
