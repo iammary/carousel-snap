@@ -66,7 +66,7 @@
 			}
 		}
 
-		var checkItemsTotal = function ( container, elementsToMove ) {
+		var checkItemsTotal = function () {
 			if ( getAvailableItems() <= elementsToMove ) {
 				hidePrevNextLink();
 				alignCenter( false );
@@ -80,24 +80,19 @@
 		var updateItemPosition = function () {
 			availableItems = getAvailableItems();
 			if ( getAvailableItems() ) {
-				if ( getAvailableItems() <= settings.elementsToMoveOnClick ) {
+				console.log( 'settings.elementsToMoveOnClick ' + settings.elementsToMoveOnClick );
+				if ( getAvailableItems() == settings.elementsToMoveOnClick ) {
+					console.log( 'hiding' )
 					hidePrevNextLink();
-					for ( var i = 0; i < getAvailableItems(); i++ ) {
-						container.children().eq( i ).css( {
-							'left'     : i * getWidthPerItem(),
-							'position' : 'absolute'
-						} )
-					}
-				} else {
-					for ( var i = 1; i < getAvailableItems(); i++ ) {
-						var previousLeft = container.children().eq( i - 1 ).position().left;
-						container.children().eq( i ).css( {
-							'left'     : previousLeft + getWidthPerItem(),
-							'position' : 'absolute'
-						} )
-					}
-					checkItemsTotal();
 				}
+				for ( var i = 1; i < getAvailableItems(); i++ ) {
+					var previousLeft = container.children().eq( i - 1 ).position().left;
+					container.children().eq( i ).css( {
+						'left'     : previousLeft + getWidthPerItem(),
+						'position' : 'absolute'
+					} )
+				}
+				checkItemsTotal();
 			}
 		}
 
