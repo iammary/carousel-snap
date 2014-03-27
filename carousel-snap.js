@@ -1,6 +1,6 @@
 /**************************************************************
  *
- * Circular Carousel Ready for Lazy Loading 2.0.0
+ * Circular Carousel Ready for Lazy Loading 1.0
  *
  **************************************************************/
 
@@ -278,18 +278,15 @@
 
 	}
 
-
 	$.fn.carouselSnap = function ( options ) {
 		return this.each( function ( key, value ) {
 			var element    = $( this );
 			var settings   = $.extend( {}, $.fn.carouselSnap.defaults, options );
-			if ( element.data( 'carouselSnap' ) ) {
-				return element.data( 'carouselSnap' )
-			} else {
+			if ( !element.data( 'carouselSnap' ) ) {
 				var carouselSnap = new CarouselSnap( this, settings );
-				carouselSnap.initialize();
 				element.data( 'carouselSnap', carouselSnap );
 			}
+			carouselSnap.initialize();
 		} );
 	};
 
