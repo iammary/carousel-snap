@@ -29,33 +29,54 @@ http://iammary.github.io/carousel-snap/
 Below is an example of the code with all available options and their defaults:
 
 ```JavaScript
-$( '#carousel' ).carouselSnap({
-		nextID: 'next-slide',
-		prevID: 'previous-slide',
-		elementsToMove: 4,
-		startOnCenter: true,
-});
+$( '#carousel' ).carouselSnap( {
+		nextID                : 'next-slide',
+		prevID                : 'previous-slide',
+		elementsToMoveOnClick : 1,
+		elementsToMoveOnHover : 1,
+		startOnCenter         : true,
+		time                  : 10000,
+		beforeShift           : function () {},
+		afterShift            : function () {}
+} );
 ```
 
 ### Exposed functions
 
-1. Append Items
+1. Append Items - .carouselAppend( items, callback )
 
 	```JavaScript
 	var items = <li>1</li><li>2</li>
-	$('.vid-tab').carouselSnap.appendItems( items )
+	$('#carousel').carouselAppend( items,
+		function( res, msg) {
+
+		/*
+		*	Wherein 'res' is returned true after
+		*	successful append and false otherwise.
+		*	Corresponding 'msg' is returned as
+		*	well to specify result details.
+		*/
+
+			console.log( msg )
+		} )
+	} )
 	```
 
-2. Remove
+2. Remove - .carouselRemove( item, callback )
 
 	```JavaScript
-	var items = '.carousel-snap-12'
-	$('.vid-tab').carouselSnap.remove( item, function( res, msg ) {
-	/*
-	*		wherein res is true after successful removal
-	*		and false otherwise
-	*		msg displays corresponding res messages both on success or error event
-	*/
+	$( '#carousel' ).carouselRemove()
+	$('#carousel li').click( function () {
+		$('#carousel').carouselRemove( this,
+			function( res, msg) {
+			/*
+			*	Wherein 'res' is returned true after
+			*	successful removal and false otherwise.
+			*	Corresponding 'msg' is returned
+			*	to specify result details.
+			*/
+			console.log( msg )
+		} )
 	} )
 	```
 

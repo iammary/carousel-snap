@@ -4,15 +4,6 @@
 	var color           = 0;
 	var fetchMultiplier = 0;
 
-	var removeElements = function ( e ) {
-		var classname = $(e).attr('class').substring(7)
-		$('.' + classname ).remove();
-		$( '.vid-tab' ).carouselSnap( {
-				updatePosition: true
-			} );
-	}
-
-
 	/* Loading effect */
 	var loadingEffect = {
 		'show' :	function () {
@@ -30,10 +21,6 @@
 
 	var loadElements = function ( color, callback ) {
 
-		/* Unbind trigger to API Call event */
-		$( '#remove' ).off( 'click', removeElements );
-		$( '#appendNow' ).off( 'click', loadMoreElements );
-
 		color = color ? color : '';
 		loadingEffect.show();
 
@@ -49,26 +36,36 @@
 				}
 			}
 			fetchMultiplier++;
-			// $( '#remove' ).on( 'click', removeElements );
-			// $( '#appendNow' ).on( 'click', loadMoreElements );
 			callback( items );
-		}, 1000 )
+		}, 9999 )
 	}
 
 	loadElements( 0, function( items ) {
+
 			$('.vid-tab').append( items );
 			loadingEffect.hide();
+
 			$( '.vid-tab' ).carouselSnap( {
-				elementsToMoveOnClick: 4
+				elementsToMoveOnClick: 4,
+				beforeShift: loadMoreElements
 			} );
-			$('.vid-tab li').click(function( e ){
-				removeElements( this )
+
+			$('.vid-tab li').click( function () {
+				$('.vid-tab').carouselRemove( this,
+					function ( res, msg) {
+						console.log( msg )
+				} )
 			})
+
 	} )
 
 	var loadMoreElements = function () {
-		loadElements( colorArrays[ color++ ], function( items ) {
-			$('.vid-tab').carouselSnap.appendItems( items )
+		loadElements( colorArrays[ color++ ], function ( items ) {
+			$('.vid-tab').carouselAppend( items,
+				function ( res, msg ) {
+					console.log( msg );
+				}
+			)
 			loadingEffect.hide();
 		} );
 		color = ( color > 3 ) ? 0 : color;
