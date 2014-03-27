@@ -37,7 +37,7 @@
 			}
 			fetchMultiplier++;
 			callback( items );
-		}, 9999 )
+		}, 1000 )
 	}
 
 	loadElements( 0, function( items ) {
