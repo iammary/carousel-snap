@@ -1,6 +1,8 @@
+/* global jQuery */
+
 /**************************************************************
  *
- * Circular Carousel Ready for Lazy Loading 1.0
+ * Circular Carousel Ready for Lazy Loading 2.0.2
  *
  **************************************************************/
 
@@ -23,38 +25,38 @@
 
 		this.setItemsToBeAdded = function ( items ) {
 			_this.itemsToBeAdded = _this.itemsToBeAdded + items;
-		}
+		};
 
 		var getAvailableItems = function () {
 			return container.children().length;
-		}
+		};
 
 		var hidePrevNextLink = function () {
 			container.parent().find('.prevNext').hide();
-		}
+		};
 
 		var showPrevNextLink = function () {
 			container.parent().find('.prevNext').show();
-		}
+		};
 
 		var getContainerWidth = function () {
 			return getAvailableItems() * container.children().outerWidth( true );
-		}
+		};
 
 		var getparentHolderWidth = function () {
 			return container.parent().outerWidth();
-		}
+		};
 
 		var getWidthPerItem = function () {
-			return container.children().outerWidth( true )
-		}
+			return container.children().outerWidth( true );
+		};
 
 		var moveby     = '-=' + ( getWidthPerItem() * elementsToMove ) + 'px';
 		var movebyPrev = '+=' + ( getWidthPerItem() * elementsToMove ) + 'px';
 
 		var setContainerWidth = function () {
 			container.css( 'width', getContainerWidth( container ) );
-		}
+		};
 
 		var alignCenter = function ( alignFlag ) {
 			var nonvisibleItems = ( getContainerWidth() - getparentHolderWidth() ) / getWidthPerItem();
@@ -66,9 +68,9 @@
 			}
 			for (var i = 0; i < getAvailableItems(); i++) {
 				var moveByItem = getWidthPerItem() * ( i  - itemsToShift );
-				container.children().eq( i ).css( 'left', moveByItem )
+				container.children().eq( i ).css( 'left', moveByItem );
 			}
-		}
+		};
 
 		var checkItemsTotal = function () {
 			if ( getAvailableItems() <= elementsToMove ) {
@@ -79,49 +81,57 @@
 				alignCenter( true );
 				return true;
 			}
-		}
+		};
+
+		var hideShowLinks = function () {
+			if ( getAvailableItems() === ( getContainerWidth/getWidthPerItem ) ) {
+				hidePrevNextLink();
+			} else {
+				showPrevNextLink();
+			}
+		};
 
 		this.updateItemPosition = function () {
 			availableItems = getAvailableItems();
 			if ( getAvailableItems() ) {
-				if ( getAvailableItems() == settings.elementsToMoveOnClick ) {
-					hidePrevNextLink();
-				} else {
-					showPrevNextLink();
-				}
+				hideShowLinks();
 				for ( var i = 1; i < getAvailableItems(); i++ ) {
 					var previousLeft = container.children().eq( i - 1 ).position().left;
 					container.children().eq( i ).css( {
 						'left'     : previousLeft + getWidthPerItem(),
 						'position' : 'absolute'
-					} )
+					} );
 				}
 				checkItemsTotal();
 			}
-		}
+		};
 
-		var appendPrevNextButtons = function () {
-			container.after( '<div class="prevNext prevLink" id="' + settings.prevID + '">Previous</div><div class="prevNext nextLink" id="' + settings.nextID + '">Next</div>' );
+		var appendPrevNextButtons = function ( newInstance ) {
+			if ( newInstance ) {
+				container.after( '<div class="prevNext prevLink" id="' + settings.prevID + '">Previous</div><div class="prevNext nextLink" id="' + settings.nextID + '">Next</div>' );
+			} else {
+				hideShowLinks();
+			}
 		};
 
 		var addStylesToItems = function ( start, addClass ) {
 			for (var i = start; i < getAvailableItems(); i++ ) {
-				container.children().eq( i ).css( 'position', 'absolute' )
+				container.children().eq( i ).css( 'position', 'absolute' );
 			}
 			if ( addClass ) {
-				for (var i = start; i < getAvailableItems(); i++ ) {
-					container.children().eq( i ).addClass( 'carousel-snap-' + i );
+				for (var j = start; j < getAvailableItems(); j++ ) {
+					container.children().eq( j ).addClass( 'carousel-snap-' + j );
 				}
 			}
 		};
 
 		var lastItemLeftValue = function () {
-			return container.children().last().position().left
-		}
+			return container.children().last().position().left;
+		};
 
 		var firstItemLeftValue = function () {
 			return container.children().first().position().left;
-		}
+		};
 
 		var appendTempItems = function ( shiftedToLeft ) {
 			if ( shiftedToLeft ) {
@@ -132,13 +142,13 @@
 				}
 			} else {
 				var firstItemLeftValueInt = firstItemLeftValue();
-				availableItems = getAvailableItems()
-				for ( var i = 1; i <= elementsToMove; i++ ) {
-					var clonedItem = container.children().eq( availableItems - 1 ).clone( true );
-					container.prepend( clonedItem.css( 'left', firstItemLeftValueInt - getWidthPerItem() * i ) );
+				availableItems = getAvailableItems();
+				for ( var j = 1; j <= elementsToMove; j++ ) {
+					var clonedItemR = container.children().eq( availableItems - 1 ).clone( true );
+					container.prepend( clonedItemR.css( 'left', firstItemLeftValueInt - getWidthPerItem() * j ) );
 				}
 			}
-		}
+		};
 
 		var checkForNewItems = function () {
 			if ( _this.requestForAppendActive ) {
@@ -163,16 +173,16 @@
 			shiftLeftCount       = 0;
 			shiftRightCount      = 0;
 			settings.afterShift();
-		}
+		};
 
 		var removeTempItems = function ( shiftedToLeft, callback ) {
-			if ( countAnimate == getAvailableItems() ) {
+			if ( countAnimate === getAvailableItems() ) {
 				if ( shiftedToLeft ) {
 					for ( var i = 1; i <= elementsToMove; i++ ) {
 						container.children().first().remove();
 					}
 				} else {
-					for ( var i = 1; i <= elementsToMove; i++ ) {
+					for ( var j = 1; j <= elementsToMove; j++ ) {
 						container.children().last().remove();
 					}
 				}
@@ -180,11 +190,11 @@
 			} else {
 				countAnimate++;
 			}
-		}
+		};
 
 		var checkEvent = function( isPrev , event ) {
 			var arrows = [ '#' + settings.nextID, '#' + settings.prevID ];
-			if ( event != undefined) {
+			if ( event !== undefined) {
 				elementsToMove = settings.elementsToMoveOnClick;
 				triggerLeaveHover( arrows[ isPrev ] );
 			} else {
@@ -209,7 +219,7 @@
 				} );
 			}
 			shiftLeftCount++;
-		}
+		};
 
 		var shiftRight = function ( event ) {
 			settings.beforeShift();
@@ -226,7 +236,7 @@
 				} );
 			}
 			shiftRightCount++;
-		}
+		};
 
 		var onHover = function( element, callback ) {
 			$( element ).hover( function() {
@@ -258,35 +268,38 @@
 		var listenToClick = function () {
 			$( '#' + settings.nextID ).on( 'click', shiftLeft );
 			$( '#' + settings.prevID ).on( 'click', shiftRight );
-		}
+		};
 
 		var unbindListenToClick = function () {
 			updatePositionActive   = false;
 			$( '#' + settings.nextID ).off( 'click',  shiftLeft);
 			$( '#' + settings.prevID ).off( 'click', shiftRight);
-		}
+		};
 
-		this.initialize = function () {
+		this.initialize = function ( newInstance ) {
 			setContainerWidth();
-			appendPrevNextButtons();
+			appendPrevNextButtons( newInstance );
 			addStylesToItems( 0, true );
 			if ( checkItemsTotal() ) {
 				listenToClick();
 				listenToHover();
 			}
-		}
+		};
 
-	}
+	};
 
 	$.fn.carouselSnap = function ( options ) {
 		return this.each( function ( key, value ) {
-			var element    = $( this );
-			var settings   = $.extend( {}, $.fn.carouselSnap.defaults, options );
-			if ( !element.data( 'carouselSnap' ) ) {
-				var carouselSnap = new CarouselSnap( this, settings );
+			var element     = $( this );
+			var settings    = $.extend( {}, $.fn.carouselSnap.defaults, options );
+			var carouselSnap    = element.data( 'carouselSnap' );
+			var newInstance = false;
+			if ( !carouselSnap ) {
+				carouselSnap = new CarouselSnap( this, settings );
 				element.data( 'carouselSnap', carouselSnap );
+				newInstance = true;
 			}
-			carouselSnap.initialize();
+			carouselSnap.initialize( newInstance );
 		} );
 	};
 
@@ -298,19 +311,19 @@
 			if ( carousel ) {
 				success = true;
 				msg     = 'Items successfully appended';
-				carousel.setItemsToBeAdded( items )
+				carousel.setItemsToBeAdded( items );
 				carousel.requestForAppendActive = true;
 			}
 			if ( callback ) {
 				callback( success, msg );
 			}
 		} );
-	}
+	};
 
 	$.fn.carouselRemove = function ( e, callback ) {
-		var carousel = $( e ).parent().data( 'carouselSnap' )
+		var carousel = $( e ).parent().data( 'carouselSnap' );
 		var success  = false;
-		var msg      = 'Item not an instance of carouselSnap'
+		var msg      = 'Item not an instance of carouselSnap';
 		if ( carousel ) {
 			$( e ).remove();
 			carousel.updateItemPosition();
@@ -320,7 +333,7 @@
 		if ( callback ) {
 			callback( success, msg );
 		}
-	}
+	};
 
 	$.fn.carouselSnap.defaults = {
 		nextID                : 'next-slide',
