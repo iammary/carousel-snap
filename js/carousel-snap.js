@@ -2,7 +2,7 @@
 
 /**************************************************************
  *
- * Circular Carousel Ready for Lazy Loading 2.0.1
+ * Circular Carousel Ready for Lazy Loading 2.0.2
  *
  **************************************************************/
 
@@ -21,6 +21,7 @@
 		var timeoutId               = null;
 		this.itemsToBeAdded         = '';
 		this.requestForAppendActive = false;
+		this.rotate                 = false;
 		var _this                   = this;
 
 		this.setItemsToBeAdded = function ( items ) {
@@ -159,7 +160,7 @@
 					var leftValue = lastItemLeftValueInt + ( getWidthPerItem() * ( i - currentItemsLength + 1 ) );
 					container.children().eq( i ).css( 'left', leftValue );
 				}
-				addStylesToItems( currentItemsLength );
+				addStylesToItems( currentItemsLength, true );
 				_this.requestForAppendActive = false;
 				_this.itemsToBeAdded = '';
 			}
@@ -205,16 +206,21 @@
 		};
 
 		var shiftLeft = function ( event ) {
-			settings.beforeShift();
 			if ( !shiftLeftCount ) {
+				settings.beforeShift();
 				checkEvent( 0 , event);
-				appendTempItems( true );
+				if ( this.rotate ) {
+					appendTempItems( true );
+				}
 				container.children().animate( {
 					'left': moveby
 				}, {
 						'start'    : unbindListenToClick,
 						'complete' : function () {
-							removeTempItems( true, resetAfterCompleteAnimation );
+							if ( this.rotate ) {
+								removeTempItems( true, resetAfterCompleteAnimation );
+							}
+							resetAfterCompleteAnimation();
 						}
 				} );
 			}
@@ -222,8 +228,8 @@
 		};
 
 		var shiftRight = function ( event ) {
-			settings.beforeShift();
 			if( !shiftRightCount ) {
+				settings.beforeShift();
 				checkEvent( 1 , event );
 				appendTempItems( false );
 				container.children().animate( {
@@ -231,7 +237,8 @@
 				}, {
 						'start'    : unbindListenToClick,
 						'complete' : function () {
-							removeTempItems( false, resetAfterCompleteAnimation );
+							//removeTempItems( false, resetAfterCompleteAnimation );
+							resetAfterCompleteAnimation();
 						}
 				} );
 			}
@@ -272,8 +279,8 @@
 
 		var unbindListenToClick = function () {
 			updatePositionActive   = false;
-			$( '#' + settings.nextID ).off( 'click',  shiftLeft);
-			$( '#' + settings.prevID ).off( 'click', shiftRight);
+			$( '#' + settings.nextID ).off( 'click',  shiftLeft );
+			$( '#' + settings.prevID ).off( 'click', shiftRight );
 		};
 
 		this.initialize = function ( newInstance ) {
@@ -343,7 +350,7 @@
 		startOnCenter         : true,
 		time                  : 10000,
 		beforeShift           : function () {},
-		afterShift            : function () {}
+		afterShift            : function () {},
 	};
 
 } )( jQuery );
