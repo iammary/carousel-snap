@@ -350,7 +350,7 @@
 		startOnCenter         : true,
 		time                  : 10000,
 		beforeShift           : function () {},
-		afterShift            : function () {},
+		afterShift            : function () {}
 	};
 
 } )( jQuery );

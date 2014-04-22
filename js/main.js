@@ -7,6 +7,8 @@
 	var colorArrays     = [ 'black', 'red', 'green', 'blue' ];
 	var color           = 0;
 	var fetchMultiplier = 0;
+	var fetchCounter    = 0;
+	var countItem       = 1;
 
 	/* Loading effect */
 	var loadingEffect = {
@@ -35,8 +37,7 @@
 		setTimeout( function () {
 			for( var j = 0; j < 4; j++ ) {
 				for ( var i = 1; i <= 6; i++ ) {
-					var countItem = i + ( j * 6 ) + ( fetchMultiplier * 4 );
-					items = items + '<li class="dummy ' + color + '"><div class="divs">' + countItem + '</div></li>';
+					items = items + '<li class="dummy ' + color + '"><div class="divs">' + countItem++ + '</div></li>';
 				}
 			}
 			fetchMultiplier++;
@@ -51,7 +52,12 @@
 
 			$( '.vid-tab' ).carouselSnap( {
 				elementsToMoveOnClick: 4,
-				beforeShift: loadMoreElements
+				beforeShift: function () {
+					if ( fetchCounter < 5 ) {
+						loadMoreElements();
+					}
+					fetchCounter++;
+				}
 			} );
 
 			$('.vid-tab li').click( function () {
