@@ -82,6 +82,9 @@ ul {
 	width: 100%;
 }
 .prevNext {
+	display     : none;
+}
+.prevNext.active {
 	cursor      : pointer;
 	width       : 45px;
 	height      : 281px;
@@ -95,12 +98,12 @@ ul {
 	margin-top  : 24px;
 	display     : none;
 }
-.nextLink {
+.nextLink.active {
 	background  : url('../img/left-arrow-right.png') no-repeat center center rgba(0,0,0,.1);
 	right: 0;
 	left: auto;
 }
-#holder:hover .prevNext {
+#holder:hover .prevNext.active {
 	display: inline-block;
 }
 li.dummy {

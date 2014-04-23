@@ -51,10 +51,15 @@
 			loadingEffect.hide();
 
 			$( '.vid-tab' ).carouselSnap( {
-				elementsToMoveOnClick: 4,
-				beforeShift: function () {
-					if ( fetchCounter < 5 ) {
+				elementsToMoveOnClick : 4,
+				startOnCenter         : false,
+				lastPaneEvent           : function () {
+					console.log( '*******last pane ko' );
+					if ( fetchCounter < 1 ) {
 						loadMoreElements();
+					} else if ( fetchCounter === 1 ) {
+						console.log( 'main rotate' );
+						$('.vid-tab').carouselRotate( true );
 					}
 					fetchCounter++;
 				}
