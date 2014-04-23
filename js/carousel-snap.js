@@ -20,11 +20,10 @@
 		var timeoutId       = null;
 		var _this           = this;
 		var availablePanes  = 1;
-		//var updatePositionActive = true;
 
 		this.itemsToBeAdded         = '';
 		this.requestForAppendActive = false;
-		this.rotate                 = false;
+		this.rotate                 = settings.rotate;
 		this.activePane             = 1;
 
 		this.setItemsToBeAdded = function ( items ) {
@@ -214,7 +213,6 @@
 		var resetAfterCompleteAnimation = function ( shiftedToLeft ) {
 			_this.checkForNewItems();
 			listenToClick( 'both' );
-			//updatePositionActive = true;
 			countAnimate         = 1;
 			shiftLeftCount       = 0;
 			shiftRightCount      = 0;
@@ -369,8 +367,7 @@
 			appendPrevNextButtons( newInstance );
 			addStylesToItems( 0, true );
 			if ( checkItemsTotal() ) {
-				if ( _this.activePane === 1 ) {
-					console.log( _this.activePane + ' activePane' );
+				if ( _this.activePane === 1 && !_this.rotate ) {
 					listenToClick( 'next' );
 				} else {
 					listenToClick( 'both' );
@@ -467,6 +464,7 @@
 		elementsToMoveOnClick : 1,
 		elementsToMoveOnHover : 1,
 		startOnCenter         : true,
+		rotate                : true,
 		time                  : 10000,
 		beforeShift           : function () {},
 		afterShift            : function () {},
