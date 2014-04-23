@@ -53,7 +53,12 @@
 			$( '.vid-tab' ).carouselSnap( {
 				elementsToMoveOnClick : 4,
 				startOnCenter         : false,
-				lastPaneEvent           : function () {
+				beforeShift : function () {
+					$('.vid-tab').getActivePane( function ( pane, msg ) {
+						console.log( msg );
+					} );
+				},
+				lastPaneEvent : function () {
 					console.log( '*******last pane ko' );
 					if ( fetchCounter < 1 ) {
 						loadMoreElements();
@@ -69,6 +74,11 @@
 				$('.vid-tab').carouselRemove( this,
 					function ( res, msg) {
 						console.log( msg );
+				} );
+			} );
+			$( '#shiftonpane' ).click( function() {
+				$('.vid-tab').shiftOnPane( 5, function ( success, msg ) {
+					console.log( msg );
 				} );
 			} );
 	} );

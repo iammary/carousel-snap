@@ -19,13 +19,13 @@
 		var countAnimate    = 1;
 		var timeoutId       = null;
 		var _this           = this;
-		var activePane      = 1;
 		var availablePanes  = 1;
 		//var updatePositionActive = true;
 
 		this.itemsToBeAdded         = '';
 		this.requestForAppendActive = false;
 		this.rotate                 = false;
+		this.activePane             = 1;
 
 		this.setItemsToBeAdded = function ( items ) {
 			_this.itemsToBeAdded = _this.itemsToBeAdded + items;
@@ -180,35 +180,32 @@
 
 		var activePaneActions = function () {
 			if ( !_this.rotate ) {
-				if ( activePane > 1 ) {
+				if ( _this.activePane > 1 ) {
 					listenToClick( 'prev' );
 				} else {
 					unbindListenToClick( 'prev' );
 				}
-				if ( availablePanes > activePane ) {
+				if ( availablePanes > _this.activePane ) {
 					listenToClick( 'next' );
 				} else {
 					unbindListenToClick( 'next' );
 					settings.lastPaneEvent();
 				}
 			}
-
-			console.log( 'total panes ' + availablePanes );
-			console.log( 'activePane ' + activePane );
 		};
 
 		var updateActivePane = function ( inc ) {
 			if ( inc ) {
-				if ( activePane === availablePanes ) {
-					activePane = 1;
+				if ( _this.activePane === availablePanes ) {
+					_this.activePane = 1;
 				} else {
-					activePane++;
+					_this.activePane++;
 				}
 			} else {
-				if ( activePane === 1 ) {
-					activePane = availablePanes;
+				if ( _this.activePane === 1 ) {
+					_this.activePane = availablePanes;
 				} else {
-					activePane--;
+					_this.activePane--;
 				}
 			}
 			activePaneActions();
@@ -246,7 +243,7 @@
 
 		var checkEvent = function( isPrev , event ) {
 			var arrows = [ '#' + settings.nextID, '#' + settings.prevID ];
-			if ( event !== undefined) {
+			if ( event !== undefined ) {
 				elementsToMove = settings.elementsToMoveOnClick;
 				triggerLeaveHover( arrows[ isPrev ] );
 			} else {
@@ -259,7 +256,7 @@
 		var shiftLeft = function ( event ) {
 			if ( !shiftLeftCount ) {
 				settings.beforeShift();
-				checkEvent( 0 , event);
+				checkEvent( 0 , event );
 				if ( _this.rotate ) {
 					appendTempItems( true );
 				}
@@ -372,8 +369,8 @@
 			appendPrevNextButtons( newInstance );
 			addStylesToItems( 0, true );
 			if ( checkItemsTotal() ) {
-				if ( activePane === 1 ) {
-					console.log( activePane + ' activePane' );
+				if ( _this.activePane === 1 ) {
+					console.log( _this.activePane + ' activePane' );
 					listenToClick( 'next' );
 				} else {
 					listenToClick( 'both' );
@@ -386,10 +383,10 @@
 
 	$.fn.carouselSnap = function ( options ) {
 		return this.each( function ( key, value ) {
-			var element     = $( this );
-			var settings    = $.extend( {}, $.fn.carouselSnap.defaults, options );
-			var carouselSnap    = element.data( 'carouselSnap' );
-			var newInstance = false;
+			var element      = $( this );
+			var settings     = $.extend( {}, $.fn.carouselSnap.defaults, options );
+			var carouselSnap = element.data( 'carouselSnap' );
+			var newInstance  = false;
 			if ( !carouselSnap ) {
 				carouselSnap = new CarouselSnap( this, settings );
 				element.data( 'carouselSnap', carouselSnap );
@@ -405,10 +402,25 @@
 			var success  = false;
 			var msg      = 'Item not an instance of carouselSnap';
 			if ( carousel ) {
-				success = true;
+				success         = true;
 				carousel.rotate = state;
 				carousel.rotateCarousel( state );
-				msg     = 'Successfully updated carousel rotate option';
+				msg = 'Successfully updated carousel rotate option';
+			}
+			if ( callback ) {
+				callback( success, msg );
+			}
+		} );
+	};
+
+	$.fn.getActivePane = function ( callback ) {
+		return this.each( function ( key, value ) {
+			var carousel = $( this ).data( 'carouselSnap' );
+			var success  = null;
+			var msg      = 'Item not an instance of carouselSnap';
+			if ( carousel ) {
+				success = carousel.activePane;
+				msg     = 'Active pane ' + success;
 			}
 			if ( callback ) {
 				callback( success, msg );
