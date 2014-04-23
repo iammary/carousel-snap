@@ -74,7 +74,7 @@
 			} else {
 				itemsToShift = 0;
 			}
-			for (var i = 0; i < getAvailableItems(); i++) {
+			for ( var i = 0; i < getAvailableItems(); i++ ) {
 				var moveByItem = getWidthPerItem() * ( i  - itemsToShift );
 				container.children().eq( i ).css( 'left', moveByItem );
 			}
@@ -362,6 +362,24 @@
 			}
 		};
 
+		this.reset = function ( pane ) {
+			container.children().first().css( 'left', 0 );
+			this.initialize( false );
+			_this.activePane = 1;
+			if ( pane ) {
+				this.shiftPanes ( pane );
+			}
+		};
+
+		this.shiftPanes = function ( panes ) {
+			var elementsToShift = ( panes - 1 ) * elementsToMove;
+			for ( var i = 0; i < getAvailableItems(); i++ ) {
+				var moveByItem = getWidthPerItem() * ( i  - elementsToShift );
+				container.children().eq( i ).css( 'left', moveByItem );
+			}
+			_this.activePane = panes;
+		};
+
 		this.initialize = function ( newInstance ) {
 			setContainerWidth();
 			appendPrevNextButtons( newInstance );
@@ -412,12 +430,28 @@
 
 	$.fn.getActivePane = function ( callback ) {
 		return this.each( function ( key, value ) {
+			var carousel   = $( this ).data( 'carouselSnap' );
+			var activePane = null;
+			var msg        = 'Item not an instance of carouselSnap';
+			if ( carousel ) {
+				activePane = carousel.activePane;
+				msg     = 'Active pane ' + activePane;
+			}
+			if ( callback ) {
+				callback( activePane, msg );
+			}
+		} );
+	};
+
+	$.fn.shiftOnPane = function ( pane, callback ) {
+		return this.each( function ( key, value ) {
 			var carousel = $( this ).data( 'carouselSnap' );
 			var success  = null;
 			var msg      = 'Item not an instance of carouselSnap';
 			if ( carousel ) {
-				success = carousel.activePane;
-				msg     = 'Active pane ' + success;
+				carousel.reset( pane );
+				msg     = 'Successfully shifted on pane ' + pane;
+				success = true;
 			}
 			if ( callback ) {
 				callback( success, msg );

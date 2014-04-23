@@ -53,17 +53,17 @@
 			$( '.vid-tab' ).carouselSnap( {
 				elementsToMoveOnClick : 4,
 				startOnCenter         : false,
-				beforeShift : function () {
+				rotate                : false,
+				beforeShift           : function () {
 					$('.vid-tab').getActivePane( function ( pane, msg ) {
 						console.log( msg );
 					} );
 				},
 				lastPaneEvent : function () {
-					console.log( '*******last pane ko' );
-					if ( fetchCounter < 1 ) {
+					var fetchCount = 1;
+					if ( fetchCounter < fetchCount ) {
 						loadMoreElements();
-					} else if ( fetchCounter === 1 ) {
-						console.log( 'main rotate' );
+					} else if ( fetchCounter === fetchCount ) {
 						$('.vid-tab').carouselRotate( true );
 					}
 					fetchCounter++;
@@ -88,6 +88,13 @@
 			$('.vid-tab').carouselAppend( items,
 				function ( res, msg ) {
 					console.log( msg );
+					$('.vid-tab').getActivePane( function ( activePane, msg ) {
+						activePane++;
+						console.log( msg );
+						$('.vid-tab').shiftOnPane( activePane, function ( success, msg ) {
+							console.log( msg );
+						} );
+					} );
 				}
 			);
 			loadingEffect.hide();
