@@ -2,7 +2,7 @@
 
 /**************************************************************
  *
- * Circular Carousel Ready for Lazy Loading 2.0.2
+ * Circular Carousel Ready for Lazy Loading 3.0
  *
  **************************************************************/
 
@@ -12,16 +12,19 @@
 	var CarouselSnap = function ( element, settings ) {
 
 		var availableItems;
-		var elementsToMove          = settings.elementsToMoveOnClick;
-		var container               = $( element );
-		var updatePositionActive    = true;
-		var shiftLeftCount          = 0;
-		var shiftRightCount         = 0;
-		var countAnimate            = 1;
-		var timeoutId               = null;
+		var elementsToMove  = settings.elementsToMoveOnClick;
+		var container       = $( element );
+		var shiftLeftCount  = 0;
+		var shiftRightCount = 0;
+		var countAnimate    = 1;
+		var timeoutId       = null;
+		var _this           = this;
+		var availablePanes  = 1;
+
 		this.itemsToBeAdded         = '';
 		this.requestForAppendActive = false;
-		var _this                   = this;
+		this.rotate                 = settings.rotate;
+		this.activePane             = 1;
 
 		this.setItemsToBeAdded = function ( items ) {
 			_this.itemsToBeAdded = _this.itemsToBeAdded + items;
@@ -31,8 +34,13 @@
 			return container.children().length;
 		};
 
+		var getTotalPanes = function () {
+			return ( Math.ceil( getAvailableItems() / elementsToMove ) );
+		};
+
 		var hidePrevNextLink = function () {
 			container.parent().find('.prevNext').hide();
+			unbindListenToClick( 'both' );
 		};
 
 		var showPrevNextLink = function () {
@@ -73,12 +81,13 @@
 		};
 
 		var checkItemsTotal = function () {
+			availablePanes = getTotalPanes();
 			if ( getAvailableItems() <= elementsToMove ) {
 				hidePrevNextLink();
 				alignCenter( false );
 				return false;
 			} else {
-				alignCenter( true );
+				alignCenter( settings.alignCenter );
 				return true;
 			}
 		};
@@ -108,7 +117,8 @@
 
 		var appendPrevNextButtons = function ( newInstance ) {
 			if ( newInstance ) {
-				container.after( '<div class="prevNext prevLink" id="' + settings.prevID + '">Previous</div><div class="prevNext nextLink" id="' + settings.nextID + '">Next</div>' );
+				container.after( '<div class="prevNext prevLink active" id="' + settings.prevID + '">Previous</div><div class="prevNext nextLink" id="' + settings.nextID + '">Next</div>' );
+				unbindListenToClick( 'prev' );
 			} else {
 				hideShowLinks();
 			}
@@ -150,7 +160,7 @@
 			}
 		};
 
-		var checkForNewItems = function () {
+		this.checkForNewItems = function () {
 			if ( _this.requestForAppendActive ) {
 				var currentItemsLength = getAvailableItems();
 				var lastItemLeftValueInt = lastItemLeftValue();
@@ -159,31 +169,68 @@
 					var leftValue = lastItemLeftValueInt + ( getWidthPerItem() * ( i - currentItemsLength + 1 ) );
 					container.children().eq( i ).css( 'left', leftValue );
 				}
-				addStylesToItems( currentItemsLength );
+				addStylesToItems( currentItemsLength, true );
 				_this.requestForAppendActive = false;
 				_this.itemsToBeAdded = '';
+				availablePanes = getTotalPanes();
+				activePaneActions();
 			}
 		};
 
-		var resetAfterCompleteAnimation = function () {
-			checkForNewItems();
-			listenToClick();
-			updatePositionActive = true;
+		var activePaneActions = function () {
+			if ( !_this.rotate ) {
+				if ( _this.activePane > 1 ) {
+					listenToClick( 'prev' );
+				} else {
+					unbindListenToClick( 'prev' );
+				}
+				if ( availablePanes > _this.activePane ) {
+					listenToClick( 'next' );
+				} else {
+					unbindListenToClick( 'next' );
+					settings.lastPaneEvent();
+				}
+			}
+		};
+
+		var updateActivePane = function ( inc ) {
+			if ( inc ) {
+				if ( _this.activePane === availablePanes ) {
+					_this.activePane = 1;
+				} else {
+					_this.activePane++;
+				}
+			} else {
+				if ( _this.activePane === 1 ) {
+					_this.activePane = availablePanes;
+				} else {
+					_this.activePane--;
+				}
+			}
+			activePaneActions();
+		};
+
+		var resetAfterCompleteAnimation = function ( shiftedToLeft ) {
+			_this.checkForNewItems();
+			listenToClick( 'both' );
 			countAnimate         = 1;
 			shiftLeftCount       = 0;
 			shiftRightCount      = 0;
+			updateActivePane( shiftedToLeft );
 			settings.afterShift();
 		};
 
 		var removeTempItems = function ( shiftedToLeft, callback ) {
 			if ( countAnimate === getAvailableItems() ) {
-				if ( shiftedToLeft ) {
-					for ( var i = 1; i <= elementsToMove; i++ ) {
-						container.children().first().remove();
-					}
-				} else {
-					for ( var j = 1; j <= elementsToMove; j++ ) {
-						container.children().last().remove();
+				if ( _this.rotate ) {
+					if ( shiftedToLeft ) {
+						for ( var i = 1; i <= elementsToMove; i++ ) {
+							container.children().first().remove();
+						}
+					} else {
+						for ( var j = 1; j <= elementsToMove; j++ ) {
+							container.children().last().remove();
+						}
 					}
 				}
 				callback();
@@ -194,7 +241,7 @@
 
 		var checkEvent = function( isPrev , event ) {
 			var arrows = [ '#' + settings.nextID, '#' + settings.prevID ];
-			if ( event !== undefined) {
+			if ( event !== undefined ) {
 				elementsToMove = settings.elementsToMoveOnClick;
 				triggerLeaveHover( arrows[ isPrev ] );
 			} else {
@@ -205,16 +252,23 @@
 		};
 
 		var shiftLeft = function ( event ) {
-			settings.beforeShift();
 			if ( !shiftLeftCount ) {
-				checkEvent( 0 , event);
-				appendTempItems( true );
+				settings.beforeShift();
+				checkEvent( 0 , event );
+				if ( _this.rotate ) {
+					appendTempItems( true );
+				}
+				unbindListenToClick( 'both' );
 				container.children().animate( {
 					'left': moveby
 				}, {
-						'start'    : unbindListenToClick,
+						'start'    : function() {
+
+						},
 						'complete' : function () {
-							removeTempItems( true, resetAfterCompleteAnimation );
+							removeTempItems( true, function () {
+								resetAfterCompleteAnimation( true );
+							} );
 						}
 				} );
 			}
@@ -222,16 +276,23 @@
 		};
 
 		var shiftRight = function ( event ) {
-			settings.beforeShift();
 			if( !shiftRightCount ) {
+				settings.beforeShift();
 				checkEvent( 1 , event );
-				appendTempItems( false );
+				if ( _this.rotate ) {
+					appendTempItems( false );
+				}
+				unbindListenToClick( 'both' );
 				container.children().animate( {
 					'left': movebyPrev
 				}, {
-						'start'    : unbindListenToClick,
+						'start'    : function() {
+
+						},
 						'complete' : function () {
-							removeTempItems( false, resetAfterCompleteAnimation );
+							removeTempItems( false, function () {
+								resetAfterCompleteAnimation( false );
+							} );
 						}
 				} );
 			}
@@ -265,15 +326,40 @@
 			onHover( '#' + settings.prevID, shiftRight );
 		};
 
-		var listenToClick = function () {
-			$( '#' + settings.nextID ).on( 'click', shiftLeft );
-			$( '#' + settings.prevID ).on( 'click', shiftRight );
+		var listenToClick = function ( element ) {
+			switch ( element ) {
+				case 'both' :
+					$( '#' + settings.nextID ).on( 'click',  shiftLeft ).addClass( 'active' );
+					$( '#' + settings.prevID ).on( 'click', shiftRight ).addClass( 'active' );
+					break;
+				case 'next' :
+					$( '#' + settings.nextID ).on( 'click',  shiftLeft ).addClass( 'active' );
+					break;
+				case 'prev' :
+					$( '#' + settings.prevID ).on( 'click',  shiftRight ).addClass( 'active' );
+					break;
+			}
 		};
 
-		var unbindListenToClick = function () {
-			updatePositionActive   = false;
-			$( '#' + settings.nextID ).off( 'click',  shiftLeft);
-			$( '#' + settings.prevID ).off( 'click', shiftRight);
+		var unbindListenToClick = function ( element ) {
+			switch ( element ) {
+				case 'both' :
+					$( '#' + settings.nextID ).off( 'click',  shiftLeft ).removeClass( 'active' );
+					$( '#' + settings.prevID ).off( 'click', shiftRight ).removeClass( 'active' );
+					break;
+				case 'next' :
+					$( '#' + settings.nextID ).off( 'click',  shiftLeft ).removeClass( 'active' );
+					break;
+				case 'prev' :
+					$( '#' + settings.prevID ).off( 'click',  shiftRight ).removeClass( 'active' );
+					break;
+			}
+		};
+
+		this.rotateCarousel = function ( state ) {
+			if ( state ) {
+				listenToClick( 'both' );
+			}
 		};
 
 		this.initialize = function ( newInstance ) {
@@ -281,7 +367,11 @@
 			appendPrevNextButtons( newInstance );
 			addStylesToItems( 0, true );
 			if ( checkItemsTotal() ) {
-				listenToClick();
+				if ( _this.activePane === 1 && !_this.rotate ) {
+					listenToClick( 'next' );
+				} else {
+					listenToClick( 'both' );
+				}
 				listenToHover();
 			}
 		};
@@ -290,16 +380,48 @@
 
 	$.fn.carouselSnap = function ( options ) {
 		return this.each( function ( key, value ) {
-			var element     = $( this );
-			var settings    = $.extend( {}, $.fn.carouselSnap.defaults, options );
-			var carouselSnap    = element.data( 'carouselSnap' );
-			var newInstance = false;
+			var element      = $( this );
+			var settings     = $.extend( {}, $.fn.carouselSnap.defaults, options );
+			var carouselSnap = element.data( 'carouselSnap' );
+			var newInstance  = false;
 			if ( !carouselSnap ) {
 				carouselSnap = new CarouselSnap( this, settings );
 				element.data( 'carouselSnap', carouselSnap );
 				newInstance = true;
 			}
 			carouselSnap.initialize( newInstance );
+		} );
+	};
+
+	$.fn.carouselRotate = function ( state, callback ) {
+		return this.each( function ( key, value ) {
+			var carousel = $( this ).data( 'carouselSnap' );
+			var success  = false;
+			var msg      = 'Item not an instance of carouselSnap';
+			if ( carousel ) {
+				success         = true;
+				carousel.rotate = state;
+				carousel.rotateCarousel( state );
+				msg = 'Successfully updated carousel rotate option';
+			}
+			if ( callback ) {
+				callback( success, msg );
+			}
+		} );
+	};
+
+	$.fn.getActivePane = function ( callback ) {
+		return this.each( function ( key, value ) {
+			var carousel = $( this ).data( 'carouselSnap' );
+			var success  = null;
+			var msg      = 'Item not an instance of carouselSnap';
+			if ( carousel ) {
+				success = carousel.activePane;
+				msg     = 'Active pane ' + success;
+			}
+			if ( callback ) {
+				callback( success, msg );
+			}
 		} );
 	};
 
@@ -313,6 +435,7 @@
 				msg     = 'Items successfully appended';
 				carousel.setItemsToBeAdded( items );
 				carousel.requestForAppendActive = true;
+				carousel.checkForNewItems();
 			}
 			if ( callback ) {
 				callback( success, msg );
@@ -341,9 +464,11 @@
 		elementsToMoveOnClick : 1,
 		elementsToMoveOnHover : 1,
 		startOnCenter         : true,
+		rotate                : true,
 		time                  : 10000,
 		beforeShift           : function () {},
-		afterShift            : function () {}
+		afterShift            : function () {},
+		lastPaneEvent         : function () {}
 	};
 
 } )( jQuery );
