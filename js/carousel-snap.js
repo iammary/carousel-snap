@@ -2,7 +2,7 @@
 
 /**************************************************************
  *
- * Circular Carousel Ready for Lazy Loading 2.0.2
+ * Circular Carousel Ready for Lazy Loading 3.0.1
  *
  **************************************************************/
 
@@ -12,7 +12,7 @@
 	var CarouselSnap = function ( element, settings ) {
 
 		var availableItems;
-		var elementsToMove  = settings.elementsToMoveOnClick;
+
 		var container       = $( element );
 		var shiftLeftCount  = 0;
 		var shiftRightCount = 0;
@@ -20,6 +20,9 @@
 		var timeoutId       = null;
 		var _this           = this;
 		var availablePanes  = 1;
+
+		//var elementsToMove  = settings.elementsToMoveOnClick;
+
 
 		this.itemsToBeAdded         = '';
 		this.requestForAppendActive = false;
@@ -29,6 +32,25 @@
 		this.setItemsToBeAdded = function ( items ) {
 			_this.itemsToBeAdded = _this.itemsToBeAdded + items;
 		};
+
+		var getparentHolderWidth = function () {
+			return container.parent().outerWidth();
+		};
+
+		var getWidthPerItem = function () {
+			return container.children().outerWidth( true );
+		};
+
+		var calcElementsToMove  = function () {
+			var shownElements = Math.floor( getparentHolderWidth() / getWidthPerItem() );
+			if ( settings.responsive ) {
+				return shownElements;
+			} else {
+				return settings.elementsToMoveOnClick;
+			}
+		};
+
+		var elementsToMove = calcElementsToMove();
 
 		var getAvailableItems = function () {
 			return container.children().length;
@@ -44,19 +66,11 @@
 		};
 
 		var showPrevNextLink = function () {
-			container.parent().find('.prevNext').show();
+			container.parent().find('.prevNext').addClass('active');
 		};
 
 		var getContainerWidth = function () {
 			return getAvailableItems() * container.children().outerWidth( true );
-		};
-
-		var getparentHolderWidth = function () {
-			return container.parent().outerWidth();
-		};
-
-		var getWidthPerItem = function () {
-			return container.children().outerWidth( true );
 		};
 
 		var moveby     = '-=' + ( getWidthPerItem() * elementsToMove ) + 'px';
@@ -117,7 +131,7 @@
 
 		var appendPrevNextButtons = function ( newInstance ) {
 			if ( newInstance ) {
-				container.after( '<div class="prevNext prevLink active" id="' + settings.prevID + '">Previous</div><div class="prevNext nextLink" id="' + settings.nextID + '">Next</div>' );
+				container.after( '<div class="prevNext prevLink active" id="' + settings.prevID + '">Previous</div><div class="prevNext nextLink" id="' + settings.nextID + '">Next</div><div class="lazyload"></div>' );
 				unbindListenToClick( 'prev' );
 			} else {
 				hideShowLinks();
@@ -232,6 +246,35 @@
 							container.children().last().remove();
 						}
 					}
+				} else {
+					var lastActiveItem = 0;
+					var countActiveView = 0;
+					for ( var i = 0; i < getAvailableItems(); i++ ) {
+						if ( container.children().eq( i ).hasClass( 'active-view' ) ) {
+							countActiveView++;
+							container.children().eq( i ).removeClass( 'active-view' );
+							lastActiveItem = i;
+						}
+					}
+					//fsdfasfafasfdsafasd
+					//fsdfasfafasfdsafasd
+					//fsdfasfafasfdsafasd
+					//fsdfasfafasfdsafasd
+					if ( shiftedToLeft ) {
+						console.log( 'lastActiveItem ' + lastActiveItem);
+						var lastCurrentActiveItem = lastActiveItem - ( countActiveView - elementsToMove );
+						for ( var i = 0; i < elementsToMove; i++ ) {
+							container.children().eq( ++lastCurrentActiveItem ).addClass( 'active-view' );
+						}
+
+					} else {
+						var firstActiveElement = lastActiveItem - countActiveView;
+						console.log( 'firstActiveElement ' + firstActiveElement )
+						for ( var i = 0; i < elementsToMove; i++ ) {
+							container.children().eq( firstActiveElement-- ).addClass( 'active-view' );
+						}
+
+					}
 				}
 				callback();
 			} else {
@@ -242,7 +285,7 @@
 		var checkEvent = function( isPrev , event ) {
 			var arrows = [ '#' + settings.nextID, '#' + settings.prevID ];
 			if ( event !== undefined ) {
-				elementsToMove = settings.elementsToMoveOnClick;
+				elementsToMove = calcElementsToMove();
 				triggerLeaveHover( arrows[ isPrev ] );
 			} else {
 				elementsToMove = settings.elementsToMoveOnHover;
@@ -253,6 +296,7 @@
 
 		var shiftLeft = function ( event ) {
 			if ( !shiftLeftCount ) {
+				elementsToMove = calcElementsToMove();
 				settings.beforeShift();
 				checkEvent( 0 , event );
 				if ( _this.rotate ) {
@@ -277,6 +321,7 @@
 
 		var shiftRight = function ( event ) {
 			if( !shiftRightCount ) {
+				elementsToMove = calcElementsToMove();
 				settings.beforeShift();
 				checkEvent( 1 , event );
 				if ( _this.rotate ) {
@@ -356,6 +401,12 @@
 			}
 		};
 
+		var updateItemStatus = function ( start ) {
+			for ( var i = start; i < elementsToMove ; i++ ) {
+				container.children().eq( i ).addClass( 'active-view' );
+			}
+		}
+
 		this.rotateCarousel = function ( state ) {
 			if ( state ) {
 				listenToClick( 'both' );
@@ -385,6 +436,7 @@
 			appendPrevNextButtons( newInstance );
 			addStylesToItems( 0, true );
 			if ( checkItemsTotal() ) {
+				updateItemStatus( 0 );
 				if ( _this.activePane === 1 && !_this.rotate ) {
 					listenToClick( 'next' );
 				} else {
@@ -499,10 +551,11 @@
 		elementsToMoveOnHover : 1,
 		startOnCenter         : true,
 		rotate                : true,
-		time                  : 10000,
+		time                  : 1000000000,
 		beforeShift           : function () {},
 		afterShift            : function () {},
-		lastPaneEvent         : function () {}
+		lastPaneEvent         : function () {},
+		responsive            : true
 	};
 
 } )( jQuery );
