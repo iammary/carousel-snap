@@ -2,9 +2,10 @@
 
 /**************************************************************
  *
- * Circular Carousel Ready for Lazy Loading 4.0.0
+ * Circular Carousel Ready for Lazy Loading 4.0.1
  *
  * Added functionality - responsiveness, swipe by touchSwipe.js
+ * for mobile devices
  *
  **************************************************************/
 
@@ -22,6 +23,7 @@
 		var timeoutId       = null;
 		var _this           = this;
 		var availablePanes  = 1;
+		var is_touch_device;
 
 		this.itemsToBeAdded         = '';
 		this.requestForAppendActive = false;
@@ -78,8 +80,12 @@
 			return getAvailableItems() * container.children().outerWidth( true );
 		};
 
-		var moveby     = '-=' + ( getWidthPerItem() * elementsToMove ) + 'px';
-		var movebyPrev = '+=' + ( getWidthPerItem() * elementsToMove ) + 'px';
+		var moveby     = function () {
+			return '-=' + ( getWidthPerItem() * elementsToMove ) + 'px';
+		} ;
+		var movebyPrev = function () {
+			return '+=' + ( getWidthPerItem() * elementsToMove ) + 'px';
+		};
 
 		var setContainerWidth = function () {
 			container.css( 'width', getContainerWidth( container ) );
@@ -136,7 +142,9 @@
 
 		var appendPrevNextButtons = function ( newInstance ) {
 			if ( newInstance ) {
-				container.after( '<div class="prevNext prevLink active" id="' + settings.prevID + '">Previous</div><div class="prevNext nextLink" id="' + settings.nextID + '">Next</div><div class="lazyload"></div>' );
+				is_touch_device = 'ontouchstart' in document.documentElement;
+				var touch = ( is_touch_device ) ? 'swipe-enabled' : 'swipe-disabled';
+				container.after( '<div class="prevNext-holder prev ' + touch + '"><div id="' + settings.prevID + '" class="prevNext prevLink active fa fa-chevron-left"></div></div><div class="prevNext-holder next ' + touch + '"><div id="' + settings.nextID + '" class="prevNext nextLink fa fa-chevron-right"></div></div><div class="lazyload"></div>' );
 				unbindListenToClick( 'prev' );
 			} else {
 				hideShowLinks();
@@ -300,8 +308,6 @@
 			} else {
 				elementsToMove = settings.elementsToMoveOnHover;
 			}
-			moveby     = '-=' + ( getWidthPerItem() * elementsToMove ) + 'px';
-			movebyPrev = '+=' + ( getWidthPerItem() * elementsToMove ) + 'px';
 		};
 
 		var shiftLeft = function ( event ) {
@@ -316,10 +322,10 @@
 				}
 				unbindListenToClick( 'both' );
 				container.children().animate( {
-					'left': moveby
-				}, {
+					'left': moveby()
+					}, {
+						'duration' : 200,
 						'start'    : function() {
-
 						},
 						'complete' : function () {
 							removeTempItems( true, function () {
@@ -343,16 +349,16 @@
 				}
 				unbindListenToClick( 'both' );
 				container.children().animate( {
-					'left': movebyPrev
-				}, {
+					'left': movebyPrev()
+					}, {
+						'duration' : 200,
 						'start'    : function() {
-
-						},
+												},
 						'complete' : function () {
-							removeTempItems( false, function () {
-								resetAfterCompleteAnimation( false );
-							} );
-						}
+													removeTempItems( false, function () {
+														resetAfterCompleteAnimation( false );
+													} );
+												}
 				} );
 			}
 			shiftRightCount++;
@@ -364,6 +370,10 @@
 
 		_this.seePrevItems = function () {
 			shiftRight();
+		}
+		_this.setActivePositions = function ( container ) {
+			//container.find( 'active-view' )
+			alignCenter( false );
 		}
 
 		var onHover = function( element, callback ) {
@@ -466,6 +476,10 @@
 			setContainerWidth();
 			appendPrevNextButtons( newInstance );
 			if ( newInstance ) {
+				is_touch_device = 'ontouchstart' in document.documentElement;
+				if ( is_touch_device ) {
+					container.addClass( 'container-touch' );
+				}
 				settings.onInitialize();
 			};
 			addStylesToItems( 0, true );
@@ -483,8 +497,15 @@
 
 	};
 
+	var initializeChangeWidth = function ( element, container ) {
+		$( window ).resize( function () {
+			container.setActivePositions( element );
+		} );
+	}
+
 	var initializeSwipe = function ( element, container ) {
 		element.parent().swipe( {
+			threshold        : 0,
 			excludedElements : '.noSwipe',
 			swipeLeft        : function () {
 				if ( element.parent().find( '.nextLink' ).first().hasClass( 'active' ) ) {
@@ -510,6 +531,7 @@
 				element.data( 'carouselSnap', carouselSnap );
 				newInstance = true;
 				initializeSwipe( element, carouselSnap );
+				initializeChangeWidth( element, carouselSnap );
 			}
 			carouselSnap.initialize( newInstance );
 		} );
