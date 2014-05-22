@@ -2,7 +2,7 @@
 
 /**************************************************************
  *
- * Circular Carousel Ready for Lazy Loading 4.0.1
+ * Circular Carousel Ready for Lazy Loading 4.0.2
  *
  * Added functionality - responsiveness, swipe by touchSwipe.js
  * for mobile devices
