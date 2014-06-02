@@ -2,10 +2,9 @@
 
 /**************************************************************
  *
- * Circular Carousel Ready for Lazy Loading 4.0.2
+ * Circular Carousel Ready for Lazy Loading 4.0.3
  *
- * Added functionality - responsiveness, swipe by touchSwipe.js
- * for mobile devices
+ * Added functionality - Exposed cloning of items
  *
  **************************************************************/
 
@@ -30,6 +29,7 @@
 		this.rotate                 = settings.rotate;
 		this.activePane             = 1;
 		this.firstActiveElement     = 1;
+		this.currentCloned          = null;
 
 		this.setItemsToBeAdded = function ( items ) {
 			_this.itemsToBeAdded = _this.itemsToBeAdded + items;
@@ -176,6 +176,8 @@
 				for ( var i = 1; i <= elementsToMove; i++ ) {
 					var clonedItem = container.children().eq( i - 1 ).clone( true );
 					container.append( clonedItem.css( 'left', lastItemLeftValueInt + getWidthPerItem() * i ) );
+					_this.currentCloned = container.children().last();
+					settings.afterClone();
 				}
 			} else {
 				var firstItemLeftValueInt = firstItemLeftValue();
@@ -183,6 +185,8 @@
 				for ( var j = 1; j <= elementsToMove; j++ ) {
 					var clonedItemR = container.children().eq( availableItems - 1 ).clone( true );
 					container.prepend( clonedItemR.css( 'left', firstItemLeftValueInt - getWidthPerItem() * j ) );
+					_this.currentCloned = container.children().first();
+					settings.afterClone();
 				}
 			}
 		};
@@ -665,6 +669,21 @@
 		}
 	};
 
+	$.fn.currentClonedItem = function ( callback ) {
+		return this.each( function ( key, value ) {
+			var carousel   = $( this ).data( 'carouselSnap' );
+			var itemCloned = null;
+			var msg        = 'Item not an instance of carouselSnap';
+			if ( carousel ) {
+				itemCloned = carousel.currentCloned;
+				msg     = 'Cuurently cloned item ' + itemCloned;
+			}
+			if ( callback ) {
+				callback( itemCloned, msg );
+			}
+		} );
+	};
+
 	$.fn.carouselSnap.defaults = {
 		nextID                : 'next-slide',
 		prevID                : 'previous-slide',
@@ -677,7 +696,8 @@
 		afterShift            : function () {},
 		lastPaneEvent         : function () {},
 		onInitialize          : function () {},
-		responsive            : true
+		responsive            : true,
+		afterClone            : function () {}
 	};
 
 } )( jQuery );
