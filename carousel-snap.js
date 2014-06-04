@@ -2,9 +2,9 @@
 
 /**************************************************************
  *
- * Circular Carousel Ready for Lazy Loading 4.0.3
+ * Circular Carousel Ready for Lazy Loading 4.0.4
  *
- * Added functionality - Exposed cloning of items
+ * Bug fixes for navigational buttons on mobile devices
  *
  **************************************************************/
 
@@ -22,8 +22,8 @@
 		var timeoutId       = null;
 		var _this           = this;
 		var availablePanes  = 1;
-		var is_touch_device;
 
+		this.is_touch_device;
 		this.itemsToBeAdded         = '';
 		this.requestForAppendActive = false;
 		this.rotate                 = settings.rotate;
@@ -68,7 +68,7 @@
 		};
 
 		var hidePrevNextLink = function () {
-			container.parent().find('.prevNext').hide();
+			container.parent().find('.prevNext').removeClass('active');
 			unbindListenToClick( 'both' );
 		};
 
@@ -107,6 +107,7 @@
 
 		var checkItemsTotal = function () {
 			availablePanes = getTotalPanes();
+			_this.updateItemStatus( 0 );
 			if ( getAvailableItems() <= elementsToMove ) {
 				hidePrevNextLink();
 				alignCenter( false );
@@ -117,10 +118,22 @@
 			}
 		};
 
-		var hideShowLinks = function () {
-			if ( getAvailableItems() === ( getContainerWidth/getWidthPerItem ) ) {
+		var fittedElements = function () {
+			var elementsOnScreen = Math.ceil( getparentHolderWidth() / getWidthPerItem() );
+			if ( elementsOnScreen === calcElementsToMove() ) {
+				container.parent().removeClass( 'elements-not-fitted' );
+				container.parent().addClass( 'elements-fitted' );
+			} else {
+				container.parent().removeClass( 'elements-fitted' );
+				container.parent().addClass( 'elements-not-fitted' );
+			}
+		}
+
+		this.hideShowLinks = function () {
+			if ( getAvailableItems() <= calcElementsToMove() ) {
 				hidePrevNextLink();
 			} else {
+				fittedElements();
 				showPrevNextLink();
 			}
 		};
@@ -128,7 +141,7 @@
 		this.updateItemPosition = function () {
 			availableItems = getAvailableItems();
 			if ( getAvailableItems() ) {
-				hideShowLinks();
+				_this.hideShowLinks();
 				for ( var i = 1; i < getAvailableItems(); i++ ) {
 					var previousLeft = container.children().eq( i - 1 ).position().left;
 					container.children().eq( i ).css( {
@@ -142,12 +155,12 @@
 
 		var appendPrevNextButtons = function ( newInstance ) {
 			if ( newInstance ) {
-				is_touch_device = 'ontouchstart' in document.documentElement;
-				var touch = ( is_touch_device ) ? 'swipe-enabled' : 'swipe-disabled';
-				container.after( '<div class="prevNext-holder prev ' + touch + '"><div id="' + settings.prevID + '" class="prevNext prevLink active fa fa-chevron-left"></div></div><div class="prevNext-holder next ' + touch + '"><div id="' + settings.nextID + '" class="prevNext nextLink fa fa-chevron-right"></div></div><div class="lazyload"></div>' );
+				_this.is_touch_device = 'ontouchstart' in document.documentElement;
+				var touch = ( _this.is_touch_device ) ? 'swipe-enabled' : 'swipe-disabled';
+				container.after( '<div class="prevNext-holder prev ' + touch + '"><div class="prevNext2 prevLink2 fa fa-angle-left"></div><div id="' + settings.prevID + '" class="prevNext prevLink active fa fa-angle-left"></div></div><div class="prevNext-holder next ' + touch + '"><div class="prevNext2 nextLink2 fa fa-angle-right"></div><div id="' + settings.nextID + '" class="prevNext nextLink fa fa-angle-right"></div></div><div class="lazyload"></div>' );
 				unbindListenToClick( 'prev' );
 			} else {
-				hideShowLinks();
+				_this.hideShowLinks();
 			}
 		};
 
@@ -260,41 +273,55 @@
 
 		var setActiveItems = function ( shiftedToLeft ) {
 			var lastActiveItem = 0;
-				var countActiveView = 0;
-				for ( var i = 0; i < getAvailableItems(); i++ ) {
-					if ( container.children().eq( i ).hasClass( 'active-view' ) ) {
-						countActiveView++;
-						container.children().eq( i ).removeClass( 'active-view' );
-						lastActiveItem = i;
-					}
+			var countActiveView = 0;
+			for ( var i = 0; i < getAvailableItems(); i++ ) {
+				if ( container.children().eq( i ).hasClass( 'active-view' ) ) {
+					countActiveView++;
+					container.children().eq( i ).removeClass( 'active-view' );
+					lastActiveItem = i;
 				}
-					_this.lastCurrentActiveItem = lastActiveItem - ( countActiveView - elementsToMove );
-				_this.firstActiveElement = lastActiveItem - countActiveView;
-				if ( shiftedToLeft ) {
-					for ( var i = 0; i < elementsToMove; i++ ) {
-						container.children().eq( ++_this.lastCurrentActiveItem ).addClass( 'active-view' );
-					}
-
-				} else {
-					for ( var i = 0; i < elementsToMove; i++ ) {
-						container.children().eq( _this.firstActiveElement-- ).addClass( 'active-view' );
-					}
-
+			}
+			_this.lastCurrentActiveItem = lastActiveItem - ( countActiveView - elementsToMove );
+			_this.firstActiveElement = lastActiveItem - countActiveView;
+			if ( shiftedToLeft ) {
+				for ( var i = 0; i < elementsToMove; i++ ) {
+					container.children().eq( ++_this.lastCurrentActiveItem ).addClass( 'active-view' );
 				}
-		}
+
+			} else {
+				for ( var i = 0; i < elementsToMove; i++ ) {
+					container.children().eq( _this.firstActiveElement-- ).addClass( 'active-view' );
+				}
+
+			}
+		};
+
+		var setActiveRotatingItems = function () {
+			container.children().removeClass( 'active-view' );
+			for ( var i = 0; i < calcElementsToMove(); i++ ) {
+				container.children().eq( i ).addClass( 'active-view' );
+			}
+		};
 
 		var removeTempItems = function ( shiftedToLeft, callback ) {
 			if ( countAnimate === getAvailableItems() ) {
 				if ( _this.rotate ) {
 					if ( shiftedToLeft ) {
-						for ( var i = 1; i <= elementsToMove; i++ ) {
+						for ( var i = 1; i <= calcElementsToMove(); i++ ) {
 							container.children().first().remove();
+							if ( i === calcElementsToMove() ) {
+								setActiveRotatingItems();
+							}
 						}
 					} else {
-						for ( var j = 1; j <= elementsToMove; j++ ) {
+						for ( var j = 1; j <= calcElementsToMove(); j++ ) {
 							container.children().last().remove();
+							if ( i === calcElementsToMove() ) {
+								setActiveRotatingItems();
+							}
 						}
 					}
+
 				} else {
 					setActiveItems ( shiftedToLeft );
 				}
@@ -425,19 +452,19 @@
 		var unbindListenToClick = function ( element ) {
 			switch ( element ) {
 				case 'both' :
-					$( '#' + settings.nextID ).off( 'click',  shiftLeft ).removeClass( 'active' );
-					$( '#' + settings.prevID ).off( 'click', shiftRight ).removeClass( 'active' );
+					$( '#' + settings.nextID ).removeClass( 'active' );
+					$( '#' + settings.prevID ).removeClass( 'active' );
 					break;
 				case 'next' :
-					$( '#' + settings.nextID ).off( 'click',  shiftLeft ).removeClass( 'active' );
+					$( '#' + settings.nextID ).removeClass( 'active' );
 					break;
 				case 'prev' :
-					$( '#' + settings.prevID ).off( 'click',  shiftRight ).removeClass( 'active' );
+					$( '#' + settings.prevID ).removeClass( 'active' );
 					break;
 			}
 		};
 
-		var updateItemStatus = function ( start ) {
+		this.updateItemStatus = function ( start ) {
 			for ( var i = start; i < elementsToMove ; i++ ) {
 				container.children().eq( i ).addClass( 'active-view' );
 			}
@@ -480,23 +507,23 @@
 			setContainerWidth();
 			appendPrevNextButtons( newInstance );
 			if ( newInstance ) {
-				is_touch_device = 'ontouchstart' in document.documentElement;
-				if ( is_touch_device ) {
+				_this.is_touch_device = 'ontouchstart' in document.documentElement;
+				if ( _this.is_touch_device ) {
 					container.addClass( 'container-touch' );
 				}
 				settings.onInitialize();
 			};
 			addStylesToItems( 0, true );
 			if ( checkItemsTotal() ) {
-				updateItemStatus( 0 );
 				if ( _this.activePane === 1 && !_this.rotate ) {
 					listenToClick( 'next' );
 				} else {
 					listenToClick( 'both' );
 				}
+				var shownElements = Math.floor( getparentHolderWidth() / getWidthPerItem() );
+				fittedElements();
 				listenToHover();
 			}
-
 		};
 
 	};
@@ -504,24 +531,28 @@
 	var initializeChangeWidth = function ( element, container ) {
 		$( window ).resize( function () {
 			container.setActivePositions( element );
+			container.hideShowLinks( false );
 		} );
 	}
 
 	var initializeSwipe = function ( element, container ) {
-		element.parent().swipe( {
-			threshold        : 0,
-			excludedElements : '.noSwipe',
-			swipeLeft        : function () {
-				if ( element.parent().find( '.nextLink' ).first().hasClass( 'active' ) ) {
-					container.seeNextItems();
+		var istouch = 'ontouchstart' in document.documentElement;
+		if ( istouch ) {
+			element.parent().swipe( {
+				threshold        : 0,
+				excludedElements : '.noSwipe, .sc-info-icon, .sc-watch-later-icon, .prevNext',
+				swipeLeft        : function () {
+					if ( element.parent().find( '.nextLink' ).first().hasClass( 'active' ) ) {
+						container.seeNextItems();
+					}
+				},
+				swipeRight       : function () {
+					if ( element.parent().find( '.prevLink' ).first().hasClass( 'active' ) ) {
+						container.seePrevItems();
+					}
 				}
-			},
-			swipeRight       : function () {
-				if ( element.parent().find( '.prevLink' ).first().hasClass( 'active' ) ) {
-					container.seePrevItems();
-				}
-			}
-		} );
+			} );
+		}
 	}
 
 	$.fn.carouselSnap = function ( options ) {
