@@ -2,7 +2,7 @@
 
 /**************************************************************
  *
- * Circular Carousel Ready for Lazy Loading 4.0.4
+ * Circular Carousel Ready for Lazy Loading 4.0.5
  *
  * Bug fixes for navigational buttons on mobile devices
  *
@@ -119,8 +119,11 @@
 		};
 
 		var fittedElements = function () {
-			var elementsOnScreen = Math.ceil( getparentHolderWidth() / getWidthPerItem() );
-			if ( elementsOnScreen === calcElementsToMove() ) {
+			var elementsOnScreen = getparentHolderWidth() / getWidthPerItem();
+			var outer = container.children().outerWidth( true );
+			var inner = container.children().width();
+			var remaining = getparentHolderWidth() % getWidthPerItem();
+			if ( ( getAvailableItems() > calcElementsToMove() ) && ( remaining <= outer - inner ) ) {
 				container.parent().removeClass( 'elements-not-fitted' );
 				container.parent().addClass( 'elements-fitted' );
 			} else {
@@ -188,7 +191,7 @@
 				var lastItemLeftValueInt = lastItemLeftValue();
 				for ( var i = 1; i <= elementsToMove; i++ ) {
 					var clonedItem = container.children().eq( i - 1 ).clone( true );
-					container.append( clonedItem.css( 'left', lastItemLeftValueInt + getWidthPerItem() * i ) );
+					container.append( clonedItem.css( 'left', lastItemLeftValueInt + getWidthPerItem() * i ).addClass( 'cloned-item' ) );
 					_this.currentCloned = container.children().last();
 					settings.afterClone();
 				}
@@ -197,7 +200,7 @@
 				availableItems = getAvailableItems();
 				for ( var j = 1; j <= elementsToMove; j++ ) {
 					var clonedItemR = container.children().eq( availableItems - 1 ).clone( true );
-					container.prepend( clonedItemR.css( 'left', firstItemLeftValueInt - getWidthPerItem() * j ) );
+					container.prepend( clonedItemR.css( 'left', firstItemLeftValueInt - getWidthPerItem() * j ).addClass( 'cloned-item' ) );
 					_this.currentCloned = container.children().first();
 					settings.afterClone();
 				}
@@ -271,28 +274,29 @@
 			settings.afterShift();
 		};
 
+		var setActiveFunc = function () {
+			var lastActiveItemEl = container.find( '.active-view' ).last();
+			_this.lastCurrentActiveItem = container.children().index( lastActiveItemEl );
+			_this.firstActiveElement = _this.lastCurrentActiveItem - calcElementsToMove() + 1;
+		}
+
 		var setActiveItems = function ( shiftedToLeft ) {
-			var lastActiveItem = 0;
-			var countActiveView = 0;
-			for ( var i = 0; i < getAvailableItems(); i++ ) {
-				if ( container.children().eq( i ).hasClass( 'active-view' ) ) {
-					countActiveView++;
-					container.children().eq( i ).removeClass( 'active-view' );
-					lastActiveItem = i;
-				}
-			}
-			_this.lastCurrentActiveItem = lastActiveItem - ( countActiveView - elementsToMove );
-			_this.firstActiveElement = lastActiveItem - countActiveView;
+			setActiveFunc();
+			container.children().removeClass( 'active-view' );
 			if ( shiftedToLeft ) {
-				for ( var i = 0; i < elementsToMove; i++ ) {
-					container.children().eq( ++_this.lastCurrentActiveItem ).addClass( 'active-view' );
+				for ( var i = 1; i <= calcElementsToMove(); i++ ) {
+					container.children().eq( _this.lastCurrentActiveItem + i ).addClass( 'active-view' );
+					if ( i === ( calcElementsToMove() ) ) {
+						setActiveFunc();
+					}
 				}
-
 			} else {
-				for ( var i = 0; i < elementsToMove; i++ ) {
-					container.children().eq( _this.firstActiveElement-- ).addClass( 'active-view' );
+				for ( var i = 0; i < calcElementsToMove(); i++ ) {
+					container.children().eq( _this.lastCurrentActiveItem - calcElementsToMove() - i ).addClass( 'active-view' );
+					if ( i === ( calcElementsToMove() - 1 ) ) {
+						setActiveFunc();
+					}
 				}
-
 			}
 		};
 
@@ -437,14 +441,14 @@
 		var listenToClick = function ( element ) {
 			switch ( element ) {
 				case 'both' :
-					$( '#' + settings.nextID ).on( 'click',  shiftLeft ).addClass( 'active' );
-					$( '#' + settings.prevID ).on( 'click', shiftRight ).addClass( 'active' );
+					$( '#' + settings.nextID ).on( 'click',  shiftLeft ).addClass( 'active' ).prev().addClass( 'bg-link-active' );
+					$( '#' + settings.prevID ).on( 'click', shiftRight ).addClass( 'active' ).prev().addClass( 'bg-link-active' );
 					break;
 				case 'next' :
-					$( '#' + settings.nextID ).on( 'click',  shiftLeft ).addClass( 'active' );
+					$( '#' + settings.nextID ).on( 'click',  shiftLeft ).addClass( 'active' ).prev().addClass( 'bg-link-active' );
 					break;
 				case 'prev' :
-					$( '#' + settings.prevID ).on( 'click',  shiftRight ).addClass( 'active' );
+					$( '#' + settings.prevID ).on( 'click',  shiftRight ).addClass( 'active' ).prev().addClass( 'bg-link-active' );
 					break;
 			}
 		};
@@ -452,14 +456,14 @@
 		var unbindListenToClick = function ( element ) {
 			switch ( element ) {
 				case 'both' :
-					$( '#' + settings.nextID ).removeClass( 'active' );
-					$( '#' + settings.prevID ).removeClass( 'active' );
+					$( '#' + settings.nextID ).removeClass( 'active' ).removeClass( 'bg-link-active' );
+					$( '#' + settings.prevID ).removeClass( 'active' ).removeClass( 'bg-link-active' );
 					break;
 				case 'next' :
-					$( '#' + settings.nextID ).removeClass( 'active' );
+					$( '#' + settings.nextID ).removeClass( 'active' ).removeClass( 'bg-link-active' );
 					break;
 				case 'prev' :
-					$( '#' + settings.prevID ).removeClass( 'active' );
+					$( '#' + settings.prevID ).removeClass( 'active' ).prev().removeClass( 'bg-link-active' );
 					break;
 			}
 		};
@@ -476,14 +480,20 @@
 			}
 		};
 
-		var shiftOnLastViewBeforeReset = function ( pane ) {
-			var elementsToShift = pane + elementsToMove + 1;
+		var shiftOnLastViewBeforeReset = function ( pane, callback ) {
+			var elementsToShift = _this.firstActiveElement;
 			for ( var i = 0; i < getAvailableItems(); i++ ) {
 				var moveByItem = getWidthPerItem() * ( i  - elementsToShift );
 				container.children().eq( i ).css( 'left', moveByItem ).removeClass( 'active-view');
-				if ( ( i >= elementsToShift ) && i < ( elementsToShift + elementsToMove ) ) {
-					container.children().eq( i ).addClass( 'active-view' );
+				if ( i === ( getAvailableItems() - 1 ) ) {
+					callback();
 				}
+			}
+		}
+
+		var addClassOnShiftedPane = function () {
+			for ( var i = 0; i < calcElementsToMove (); i++ ) {
+				container.children().eq( _this.firstActiveElement + i ).addClass( 'active-view' );
 			}
 		}
 
@@ -491,7 +501,7 @@
 			container.children().first().css( 'left', 0 );
 			this.initialize( false );
 			_this.activePane = 1;
-			shiftOnLastViewBeforeReset( pane );
+			shiftOnLastViewBeforeReset( pane, addClassOnShiftedPane );
 		};
 
 		this.shiftPanes = function ( panes ) {
