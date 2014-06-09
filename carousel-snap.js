@@ -2,9 +2,9 @@
 
 /**************************************************************
  *
- * Circular Carousel Ready for Lazy Loading 4.0.5
+ * Circular Carousel Ready for Lazy Loading 4.0.6
  *
- * Bug fixes for navigational buttons on mobile devices
+ * Added function before and after cloning item
  *
  **************************************************************/
 
