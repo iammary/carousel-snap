@@ -190,19 +190,25 @@
 			if ( shiftedToLeft ) {
 				var lastItemLeftValueInt = lastItemLeftValue();
 				for ( var i = 1; i <= elementsToMove; i++ ) {
-					var clonedItem = container.children().eq( i - 1 ).clone( true );
-					container.append( clonedItem.css( 'left', lastItemLeftValueInt + getWidthPerItem() * i ).addClass( 'cloned-item' ) );
+					var elem = container.children().eq( i - 1 );
+					settings.beforeItemClone( elem );
+					var clonedItem = elem.clone( true );
+					settings.afterItemClone( clonedItem  );
+
+					container.append( clonedItem.css( 'left', lastItemLeftValueInt + getWidthPerItem() * i ) );
 					_this.currentCloned = container.children().last();
-					settings.afterClone();
 				}
 			} else {
 				var firstItemLeftValueInt = firstItemLeftValue();
 				availableItems = getAvailableItems();
 				for ( var j = 1; j <= elementsToMove; j++ ) {
-					var clonedItemR = container.children().eq( availableItems - 1 ).clone( true );
-					container.prepend( clonedItemR.css( 'left', firstItemLeftValueInt - getWidthPerItem() * j ).addClass( 'cloned-item' ) );
+					var elemR = container.children().eq( availableItems - 1 );
+					settings.beforeItemClone( elemR );
+					var clonedItemR = elemR.clone( true );
+					settings.afterItemClone( clonedItemR );
+
+					container.prepend( clonedItemR.css( 'left', firstItemLeftValueInt - getWidthPerItem() * j ) );
 					_this.currentCloned = container.children().first();
-					settings.afterClone();
 				}
 			}
 		};
@@ -738,7 +744,8 @@
 		lastPaneEvent         : function () {},
 		onInitialize          : function () {},
 		responsive            : true,
-		afterClone            : function () {}
+		beforeItemClone       : function () {},
+		afterItemClone        : function () {}
 	};
 
 } )( jQuery );
